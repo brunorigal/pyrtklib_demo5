@@ -988,16 +988,6 @@ extern void rtksvrstop  (rtksvr_t *svr,std::vector<std::string> Dcmds){
     freeConstCharPtrArray(cmds);
 
 }
-extern int  rtksvrostat (rtksvr_t *svr, int type, gtime_t *time,Arr1D<int> Ssat,Arr1D<double> Saz,Arr1D<double> Sel,std::vector<std::vector<int>> Dsnr,Arr1D<int> Svsat){
-    int **snr = convertType(Dsnr);
-    int *sat = Ssat.src;
-    double *az = Saz.src;
-    double *el = Sel.src;
-    int *vsat = Svsat.src;
-    auto tmp = rtksvrostat(svr, type, time, sat, az, el, snr, vsat);
-    free(snr);
-    return tmp;
-}
 extern void rtksvrsstat (rtksvr_t *svr,Arr1D<int> Ssstat,Arr1D<char> Smsg){
     int *sstat = Ssstat.src;
     char *msg = Smsg.src;
@@ -1048,6 +1038,13 @@ PYBIND11_MODULE(pyrtklib5, m) {
     .def("cleareof", &FileWrapper::cleareof);
 
     m.doc() = "rtklib python interface by pybind11";
+    /* ==== BEGIN HANDMERGE: GIT_SHA ==== */
+#ifdef PYRTKLIB5_GIT_SHA
+    m.attr("GIT_SHA")=PYRTKLIB5_GIT_SHA;
+#else
+    m.attr("GIT_SHA")="unknown";
+#endif
+    /* ==== END HANDMERGE ==== */
     m.attr("PI")=3.1415926535897932;
     m.attr("D2R")=(PI/180.0);
     m.attr("R2D")=(180.0/PI);
@@ -1420,13 +1417,6 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.attr("P2_55")=2.775557561562891E-17;
     m.attr("VER_RTKLIB")="EX";
     m.attr("PATCH_LEVEL")="2.5.0";
-    /* ==== BEGIN HANDMERGE: GIT_SHA ==== */
-#ifdef PYRTKLIB5_GIT_SHA
-    m.attr("GIT_SHA")=PYRTKLIB5_GIT_SHA;
-#else
-    m.attr("GIT_SHA")="unknown";
-#endif
-    /* ==== END HANDMERGE ==== */
     bindArr1D<gtime_t>(m,"gtime_t");
     bindArr2D<gtime_t>(m,"gtime_t");
     bindArr1D<obsd_t>(m,"obsd_t");
@@ -2580,7 +2570,6 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.def("strsvrstat",static_cast<void(*)(strsvr_t *svr,Arr1D<int> Sstat,Arr1D<int> Slog_stat,Arr1D<int> Sbyte,Arr1D<int> Sbps,Arr1D<char> Smsg)>(&strsvrstat),"rtklib strsvrstat");
     m.def("rtksvrstart",static_cast<int(*)(rtksvr_t *svr, int cycle, int buffsize,Arr1D<int> Sstrs,std::vector<std::string> Dpaths,Arr1D<int> Sformats, int navsel,std::vector<std::string> Dcmds,std::vector<std::string> Dcmds_periodic,std::vector<std::string> Drcvopts, int nmeacycle, int nmeareq,Arr1D<double> Snmeapos, prcopt_t *prcopt, solopt_t *solopt, stream_t *moni,Arr1D<char> Serrmsg)>(&rtksvrstart),"rtklib rtksvrstart");
     m.def("rtksvrstop",static_cast<void(*)(rtksvr_t *svr,std::vector<std::string> Dcmds)>(&rtksvrstop),"rtklib rtksvrstop");
-    m.def("rtksvrostat",static_cast<int(*)(rtksvr_t *svr, int type, gtime_t *time,Arr1D<int> Ssat,Arr1D<double> Saz,Arr1D<double> Sel,std::vector<std::vector<int>> Dsnr,Arr1D<int> Svsat)>(&rtksvrostat),"rtklib rtksvrostat");
     m.def("rtksvrsstat",static_cast<void(*)(rtksvr_t *svr,Arr1D<int> Ssstat,Arr1D<char> Smsg)>(&rtksvrsstat),"rtklib rtksvrsstat");
     m.def("dl_readurls",static_cast<int(*)(const char *file,std::vector<std::string> Dtypes, int ntype, url_t *urls, int nmax)>(&dl_readurls),"rtklib dl_readurls");
     m.def("dl_readstas",static_cast<int(*)(const char *file,std::vector<std::string> Dstas, int nmax)>(&dl_readstas),"rtklib dl_readstas");

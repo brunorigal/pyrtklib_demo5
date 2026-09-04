@@ -233,8 +233,10 @@ DEFINE = ['ENACMP','ENAGAL','ENAGLO','ENAQZS','ENAIRN']
 with open('pyrtklib5/rtksrc/rtklib.h','r') as f:
 	src = f.read()
 defines = getDefine(src,DEFINE)
-defines.append(['VER_RTKLIB','"EX"'])
-defines.append(['PATCH_LEVEL','"2.5.0"'])
+# version strings straight from the header (getDefine drops string-valued macros)
+for _name in ('VER_RTKLIB', 'PATCH_LEVEL'):
+	_m = re.search(r'#define\s+%s\s+("[^"]*")' % _name, src)
+	defines.append([_name, _m.group(1) if _m else '"unknown"'])
 src = remover(src)
 rec = re.compile('extern "C" {(.*)}',re.DOTALL)
 src = rec.findall(src)[0]
@@ -246,7 +248,7 @@ src = src.replace('typedef void fatalfunc_t(const char *);',"")
 src = src.replace('EXPORT','extern')
 src = src.replace('rtklib_lock_t lock;',"")
 src = src.replace('rtklib_thread_t thread;',"")
-src = "typedef long time_t;\ntypedef long lock_t;\ntypedef long thread_t;\ntypedef long FILE;\ntypedef unsigned char uint8_t;\ntypedef unsigned short int uint16_t;\ntypedef unsigned int uint32_t;\ntypedef short int int16_t;\ntypedef int int32_t;\n"+src
+src = "typedef long time_t;\ntypedef unsigned long size_t;\ntypedef long lock_t;\ntypedef long thread_t;\ntypedef long FILE;\ntypedef unsigned char uint8_t;\ntypedef unsigned short int uint16_t;\ntypedef unsigned int uint32_t;\ntypedef short int int16_t;\ntypedef int int32_t;\n"+src
 src = re.sub('\\n+','\\n',re.sub(' \\n','\\n',src).strip())
 parser = pycparser.CParser()
 ast = parser.parse(src)
@@ -449,7 +451,9 @@ content = content.replace('m.attr("NFREQ")=3;', 'm.attr("NFREQ")=NFREQ;')
 # merge_handmerge.py re-injects. Regenerate with `python merge_handmerge.py`.
 # ---------------------------------------------------------------------------
 # 1. functions whose C source is not part of this rtksrc tree
-SKIP_FUNCS = ['input_cnavf', 'input_tersusf', 'input_cnav', 'input_tersus']
+# rtksvrostat (2.5.1): fixed-size array parameters (int sat[MAXSAT],
+# double snr[MAXSAT][NFREQ]) the generator cannot express; unused from Python.
+SKIP_FUNCS = ['input_cnavf', 'input_tersusf', 'input_cnav', 'input_tersus', 'rtksvrostat']
 for name in SKIP_FUNCS:
 	content = re.sub(r'extern [^\n]*\b%s\s*\([^{]*\{.*?\n\}\n' % name, '', content, flags=re.DOTALL)
 	content = re.sub(r'[ \t]*m\.def\("%s",[^\n]*\n' % name, '', content)
