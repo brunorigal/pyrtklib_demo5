@@ -9,7 +9,7 @@ list below has to stay exact.
 | Milestone | Upstream commit | Upstream date | Upstream `VER_RTKLIB` / `PATCH_LEVEL` |
 |---|---|---|---|
 | 1 (this branch, from IPNL-POLYU `05845e3`) | `e247fe1d` | 2025-07-20 | `"demo5"` / `"b34L"` (stale strings upstream, fixed later) |
-| 2 (planned) | `06e86442` | 2026-08-31 | `"EX"` / `"2.5.1"` |
+| 2 (branch `vrsgen-port-main`) | `06e86442` | 2026-08-31 | `"EX"` / `"2.5.1"` |
 
 Verified with `git archive e247fe1d src | diff -rq` against this tree: every
 computational `.c` (`rtkpos.c`, `rtkcmn.c` apart from the line below, `ephemeris.c`,
@@ -42,3 +42,15 @@ byte-identical to upstream.
 Recorded commit by commit on this branch; each `[rtksrc]` commit touches the
 smallest possible set of upstream lines so the series re-applies with `git am -3`
 on the next bump. See `docs/migration_demo5_journal.md` in vrsgen for the gates.
+
+## Milestone 2 (branch `vrsgen-port-main`)
+
+`rtksrc/` is `src/` of `06e86442` **byte for byte** except: the three build files
+(`CMakeLists.txt`, `src.pro`, `rcv/CMakeLists.txt`), `rcv/comnav.c`/`rcv/tersus.c` not
+vendored, and the replayed vrsgen series. None of the milestone-1 portability edits
+survive: upstream now has `VER_RTKLIB "EX"`/`PATCH_LEVEL "2.5.1"`, `_POSIX_C_SOURCE
+200112L` and a correct `THREADLOCAL`. The `satposs` precise-clock fallback patch of
+milestone 1 was dropped: upstream `satposs()` now calls `pephclk()` directly under
+`EPHOPT_PREC`. Applied series: per-constellation ANTEX (`rtkcmn.c`, `rtklib.h`, `ppp.c`,
+one line of `zdres`) and `relpos_steps.{h,c}` (unchanged from milestone 1: every
+signature it calls is identical between `e247fe1d` and `06e86442`).
