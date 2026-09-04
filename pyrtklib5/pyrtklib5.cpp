@@ -330,6 +330,14 @@ extern int ionocorr(gtime_t time, const nav_t *nav, int sat,Arr1D<double> Spos,A
     auto tmp = ionocorr(time, nav, sat, pos, azel, ionoopt, ion, var);
     return tmp;
 }
+extern int ionvtec(gtime_t time, const nav_t *nav,Arr1D<double> Spos,Arr1D<double> Sazel, double freq,Arr1D<double> Sdelay,Arr1D<double> Svar){
+    const double *pos = Spos.src;
+    const double *azel = Sazel.src;
+    double *delay = Sdelay.src;
+    double *var = Svar.src;
+    auto tmp = ionvtec(time, nav, pos, azel, freq, delay, var);
+    return tmp;
+}
 extern int tropcorr(gtime_t time, const nav_t *nav,Arr1D<double> Spos,Arr1D<double> Sazel, int tropopt,Arr1D<double> Strp,Arr1D<double> Svar){
     const double *pos = Spos.src;
     const double *azel = Sazel.src;
@@ -466,6 +474,12 @@ extern int  open_rnxctr (rnxctr_t *rnx, FileWrapper &Ffp){
 extern int  input_rnxctr(rnxctr_t *rnx, FileWrapper &Ffp){
 	FILE *fp = Ffp.file;
     auto tmp = input_rnxctr(rnx, fp);
+    return tmp;
+}
+extern int pephclk(gtime_t time, int sat, const nav_t *nav,Arr1D<double> Sdts,Arr1D<double> Svarc){
+    double *dts = Sdts.src;
+    double *varc = Svarc.src;
+    auto tmp = pephclk(time, sat, nav, dts, varc);
     return tmp;
 }
 extern void eph2pos (gtime_t time, const eph_t  *eph,Arr1D<double> Srs,Arr1D<double> Sdts,Arr1D<double> Svar){
@@ -712,9 +726,9 @@ extern int readsol (std::vector<std::string> Dfiles, int nfile, solbuf_t *sol){
     free(files);
     return tmp;
 }
-extern int readsolt(std::vector<std::string> Dfiles, int nfile, gtime_t ts, gtime_t te, double tint, int qflag, solbuf_t *sol){
+extern int readsolt(std::vector<std::string> Dfiles, int nfile, gtime_t ts, gtime_t te, double tint, int qflag, int mean, solbuf_t *sol){
     const char **files = convertToConstCharPtrArray(Dfiles);
-    auto tmp = readsolt(files, nfile, ts, te, tint, qflag, sol);
+    auto tmp = readsolt(files, nfile, ts, te, tint, qflag, mean, sol);
     free(files);
     return tmp;
 }
@@ -792,14 +806,19 @@ extern int outnmea_gsv(Arr1D<uint8_t> Sbuff, const sol_t *sol, const ssat_t *ssa
     auto tmp = outnmea_gsv(buff, sol, ssat);
     return tmp;
 }
-extern int convkml(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg,Arr1D<double> Soffset, int tcolor, int pcolor, int outalt, int outtime){
+extern int convkml(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg, int mean, const char *name,Arr1D<double> Soffset, int tcolor, int pcolor, int outalt, int outtime){
     double *offset = Soffset.src;
-    auto tmp = convkml(infile, outfile, ts, te, tint, qflg, offset, tcolor, pcolor, outalt, outtime);
+    auto tmp = convkml(infile, outfile, ts, te, tint, qflg, mean, name, offset, tcolor, pcolor, outalt, outtime);
     return tmp;
 }
-extern int convgpx(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg,Arr1D<double> Soffset, int outtrk, int outpnt, int outalt, int outtime){
+extern int convgpx(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg, int mean, const char *name,Arr1D<double> Soffset, int outtrk, int outpnt, int outalt, int outtime){
     double *offset = Soffset.src;
-    auto tmp = convgpx(infile, outfile, ts, te, tint, qflg, offset, outtrk, outpnt, outalt, outtime);
+    auto tmp = convgpx(infile, outfile, ts, te, tint, qflg, mean, name, offset, outtrk, outpnt, outalt, outtime);
+    return tmp;
+}
+extern int convcsv(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg, int mean, const char *name,Arr1D<double> Soffset, int outalt, int outtime, int outorder){
+    double *offset = Soffset.src;
+    auto tmp = convcsv(infile, outfile, ts, te, tint, qflg, mean, name, offset, outalt, outtime, outorder);
     return tmp;
 }
 extern void sbsoutmsg(FileWrapper &Ffp, sbsmsg_t *sbsmsg){
@@ -850,7 +869,7 @@ extern int  strread  (stream_t *stream,Arr1D<uint8_t> Sbuff, int n){
     return tmp;
 }
 extern int  strwrite (stream_t *stream,Arr1D<uint8_t> Sbuff, int n){
-    uint8_t *buff = Sbuff.src;
+    const uint8_t *buff = Sbuff.src;
     auto tmp = strwrite(stream, buff, n);
     return tmp;
 }
@@ -910,9 +929,9 @@ extern int  rtkoutstat(rtk_t *rtk, int level,Arr1D<char> Sbuff){
     auto tmp = rtkoutstat(rtk, level, buff);
     return tmp;
 }
-extern int pppoutstat(rtk_t *rtk,Arr1D<char> Sbuff){
+extern int pppoutstat(rtk_t *rtk,Arr1D<char> Sbuff, int level){
     char *buff = Sbuff.src;
-    auto tmp = pppoutstat(rtk, buff);
+    auto tmp = pppoutstat(rtk, buff, level);
     return tmp;
 }
 extern int ppp_ar(rtk_t *rtk, const obsd_t *obs, int n,Arr1D<int> Sexc, const nav_t *nav,Arr1D<double> Sazel,Arr1D<double> Sx,Arr1D<double> SP){
@@ -934,21 +953,21 @@ extern int getstapos(const char *file, const char *name,Arr1D<double> Sr){
     auto tmp = getstapos(file, name, r);
     return tmp;
 }
-extern int  strsvrstart(strsvr_t *svr,Arr1D<int> Sopts,Arr1D<int> Sstrs,std::vector<std::string> Dpaths,std::vector<std::string> Dlogs,std::vector<std::vector<strconv_t>> Dconv,std::vector<std::string> Dcmds,std::vector<std::string> Dcmds_priodic,Arr1D<double> Snmeapos){
+extern int  strsvrstart(strsvr_t *svr,Arr1D<int> Sopts,Arr1D<int> Sstrs,std::vector<std::string> Dpaths,std::vector<std::string> Dlogs,std::vector<std::vector<strconv_t>> Dconv,std::vector<std::string> Dcmds,std::vector<std::string> Dcmds_periodic,Arr1D<double> Snmeapos){
     const char **paths = convertToConstCharPtrArray(Dpaths);
     const char **logs = convertToConstCharPtrArray(Dlogs);
     strconv_t **conv = convertType(Dconv);
     const char **cmds = convertToConstCharPtrArray(Dcmds);
-    const char **cmds_priodic = convertToConstCharPtrArray(Dcmds_priodic);
+    const char **cmds_periodic = convertToConstCharPtrArray(Dcmds_periodic);
     int *opts = Sopts.src;
     int *strs = Sstrs.src;
     const double *nmeapos = Snmeapos.src;
-    auto tmp = strsvrstart(svr, opts, strs, paths, logs, conv, cmds, cmds_priodic, nmeapos);
+    auto tmp = strsvrstart(svr, opts, strs, paths, logs, conv, cmds, cmds_periodic, nmeapos);
     free(paths);
     free(logs);
     free(conv);
     free(cmds);
-    free(cmds_priodic);
+    free(cmds_periodic);
     return tmp;
 }
 extern void strsvrstop (strsvr_t *svr,std::vector<std::string> Dcmds){
@@ -987,16 +1006,6 @@ extern void rtksvrstop  (rtksvr_t *svr,std::vector<std::string> Dcmds){
     rtksvrstop(svr, cmds);
     freeConstCharPtrArray(cmds);
 
-}
-extern int  rtksvrostat (rtksvr_t *svr, int type, gtime_t *time,Arr1D<int> Ssat,Arr1D<double> Saz,Arr1D<double> Sel,std::vector<std::vector<int>> Dsnr,Arr1D<int> Svsat){
-    int **snr = convertType(Dsnr);
-    int *sat = Ssat.src;
-    double *az = Saz.src;
-    double *el = Sel.src;
-    int *vsat = Svsat.src;
-    auto tmp = rtksvrostat(svr, type, time, sat, az, el, snr, vsat);
-    free(snr);
-    return tmp;
 }
 extern void rtksvrsstat (rtksvr_t *svr,Arr1D<int> Ssstat,Arr1D<char> Smsg){
     int *sstat = Ssstat.src;
@@ -1048,6 +1057,13 @@ PYBIND11_MODULE(pyrtklib5, m) {
     .def("cleareof", &FileWrapper::cleareof);
 
     m.doc() = "rtklib python interface by pybind11";
+    /* ==== BEGIN HANDMERGE: GIT_SHA ==== */
+#ifdef PYRTKLIB5_GIT_SHA
+    m.attr("GIT_SHA")=PYRTKLIB5_GIT_SHA;
+#else
+    m.attr("GIT_SHA")="unknown";
+#endif
+    /* ==== END HANDMERGE ==== */
     m.attr("PI")=3.1415926535897932;
     m.attr("D2R")=(PI/180.0);
     m.attr("R2D")=(180.0/PI);
@@ -1131,7 +1147,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.attr("NSATQZS")=(MAXPRNQZS-MINPRNQZS+1);
     m.attr("NSYSQZS")=1;
     m.attr("MINPRNCMP")=1;
-    m.attr("MAXPRNCMP")=46;
+    m.attr("MAXPRNCMP")=50;
     m.attr("NSATCMP")=(MAXPRNCMP-MINPRNCMP+1);
     m.attr("NSYSCMP")=1;
     m.attr("MINPRNIRN")=1;
@@ -1187,8 +1203,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.attr("MAXLEAPS")=64;
     m.attr("MAXGISLAYER")=32;
     m.attr("MAXRCVCMD")=4096;
-    m.attr("MAX_CODE_BIASES")=3;
-    m.attr("MAX_CODE_BIAS_FREQS")=2;
+    m.attr("MAX_CODE_BIASES")=4;
     m.attr("RNX2VER")=2.10;
     m.attr("RNX3VER")=3.00;
     m.attr("OBSTYPE_PR")=0x01;
@@ -1419,14 +1434,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.attr("P2_50")=8.881784197001252E-16;
     m.attr("P2_55")=2.775557561562891E-17;
     m.attr("VER_RTKLIB")="EX";
-    m.attr("PATCH_LEVEL")="2.5.0";
-    /* ==== BEGIN HANDMERGE: GIT_SHA ==== */
-#ifdef PYRTKLIB5_GIT_SHA
-    m.attr("GIT_SHA")=PYRTKLIB5_GIT_SHA;
-#else
-    m.attr("GIT_SHA")="unknown";
-#endif
-    /* ==== END HANDMERGE ==== */
+    m.attr("PATCH_LEVEL")="2.5.1";
     bindArr1D<gtime_t>(m,"gtime_t");
     bindArr2D<gtime_t>(m,"gtime_t");
     bindArr1D<obsd_t>(m,"obsd_t");
@@ -1459,6 +1467,8 @@ PYBIND11_MODULE(pyrtklib5, m) {
     bindArr2D<tle_t>(m,"tle_t");
     bindArr1D<tec_t>(m,"tec_t");
     bindArr2D<tec_t>(m,"tec_t");
+    bindArr1D<vtec_t>(m,"vtec_t");
+    bindArr2D<vtec_t>(m,"vtec_t");
     bindArr1D<sbsmsg_t>(m,"sbsmsg_t");
     bindArr2D<sbsmsg_t>(m,"sbsmsg_t");
     bindArr1D<sbs_t>(m,"sbs_t");
@@ -1767,6 +1777,18 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_property("rms",[](tec_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.rms,-1);return tmp;},[](tec_t& o,Arr1D<float>arr){o.rms=arr.src;},py::return_value_policy::reference)
         .def_property_readonly("ptr",[](tec_t& o){return &o;},py::return_value_policy::reference);
 
+    py::class_<vtec_t>(m,"vtec_t").def(py::init())
+        .def_readwrite("udint",&vtec_t::udint)
+        .def_readwrite("qi",&vtec_t::qi)
+        .def_readwrite("iod",&vtec_t::iod)
+        .def_readwrite("nlay",&vtec_t::nlay)
+        .def_property_readonly("nmax",[](vtec_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.nmax,4);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("mmax",[](vtec_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.mmax,4);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("hgt",[](vtec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.hgt,4);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("cosC",[](vtec_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.cosC,4,16);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("sinC",[](vtec_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.sinC,4,16);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("ptr",[](vtec_t& o){return &o;},py::return_value_policy::reference);
+
     py::class_<sbsmsg_t>(m,"sbsmsg_t").def(py::init())
         .def_readwrite("week",&sbsmsg_t::week)
         .def_readwrite("tow",&sbsmsg_t::tow)
@@ -1859,7 +1881,6 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_property_readonly("dclk",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dclk,3);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("cbias",[](ssr_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.cbias,MAXCODE);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("pbias",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pbias,MAXCODE);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("stdpb",[](ssr_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.stdpb,MAXCODE);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("ptr",[](ssr_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<nav_t>(m,"nav_t").def(py::init())
@@ -1878,6 +1899,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("nt",&nav_t::nt)
         .def_readwrite("ntmax",&nav_t::ntmax)
         .def_readwrite("erp",&nav_t::erp)
+        .def_readwrite("vtec",&nav_t::vtec)
         .def_readwrite("sbssat",&nav_t::sbssat)
         .def_property("eph",[](nav_t& o) {Arr1D<eph_t>* tmp = new Arr1D<eph_t>(o.eph,-1);return tmp;},[](nav_t& o,Arr1D<eph_t>arr){o.eph=arr.src;},py::return_value_policy::reference)
         .def_property("geph",[](nav_t& o) {Arr1D<geph_t>* tmp = new Arr1D<geph_t>(o.geph,-1);return tmp;},[](nav_t& o,Arr1D<geph_t>arr){o.geph=arr.src;},py::return_value_policy::reference)
@@ -1899,8 +1921,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_property_readonly("ion_cmp",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_cmp,8);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("ion_irn",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_irn,8);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("glo_fcn",[](nav_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.glo_fcn,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("cbias",[](nav_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.cbias,MAXSAT,MAX_CODE_BIAS_FREQS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("rbias",[](nav_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.rbias,MAXRCV,MAX_CODE_BIAS_FREQS);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("cbias",[](nav_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.cbias,MAXSAT,NFREQ);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("pcvs",[](nav_t& o) {Arr1D<pcv_t>* tmp = new Arr1D<pcv_t>(o.pcvs,MAXSAT);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("sbsion",[](nav_t& o) {Arr1D<sbsion_t>* tmp = new Arr1D<sbsion_t>(o.sbsion,MAXBAND+1);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("dgps",[](nav_t& o) {Arr1D<dgps_t>* tmp = new Arr1D<dgps_t>(o.dgps,MAXSAT);return tmp;},py::return_value_policy::reference)
@@ -1999,6 +2020,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("nbit",&rtcm_t::nbit)
         .def_readwrite("len",&rtcm_t::len)
         .def_readwrite("word",&rtcm_t::word)
+        .def_readwrite("nmsg",&rtcm_t::nmsg)
         .def_property("dgps",[](rtcm_t& o) {Arr1D<dgps_t>* tmp = new Arr1D<dgps_t>(o.dgps,-1);return tmp;},[](rtcm_t& o,Arr1D<dgps_t>arr){o.dgps=arr.src;},py::return_value_policy::reference)
         .def_property_readonly("ssr",[](rtcm_t& o) {Arr1D<ssr_t>* tmp = new Arr1D<ssr_t>(o.ssr,MAXSAT);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("msg",[](rtcm_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.msg,128);return tmp;},py::return_value_policy::reference)
@@ -2012,6 +2034,8 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_property_readonly("nmsg2",[](rtcm_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.nmsg2,100);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("nmsg3",[](rtcm_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.nmsg3,400);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("opt",[](rtcm_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.opt,256);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("msgs",[](rtcm_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.msgs,32);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("tint",[](rtcm_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.tint,32);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("ptr",[](rtcm_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<rnxctr_t>(m,"rnxctr_t").def(py::init())
@@ -2243,6 +2267,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("initial_mode",&rtk_t::initial_mode)
         .def_readwrite("epoch",&rtk_t::epoch)
         .def_readwrite("intpres_nb",&rtk_t::intpres_nb)
+        .def_readwrite("vtec_used",&rtk_t::vtec_used)
         .def_property_readonly("rb",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rb,6);return tmp;},py::return_value_policy::reference)
         .def_property("x",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.x,-1);return tmp;},[](rtk_t& o,Arr1D<double>arr){o.x=arr.src;},py::return_value_policy::reference)
         .def_property("P",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.P,-1);return tmp;},[](rtk_t& o,Arr1D<double>arr){o.P=arr.src;},py::return_value_policy::reference)
@@ -2263,7 +2288,6 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("ephsat",&raw_t::ephsat)
         .def_readwrite("ephset",&raw_t::ephset)
         .def_readwrite("sbsmsg",&raw_t::sbsmsg)
-        .def_readwrite("icpc",&raw_t::icpc)
         .def_readwrite("nbyte",&raw_t::nbyte)
         .def_readwrite("len",&raw_t::len)
         .def_readwrite("iod",&raw_t::iod)
@@ -2278,8 +2302,6 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_property_readonly("subfrm",[](raw_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.subfrm,MAXSAT,380);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("lockt",[](raw_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.lockt,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("lockflag",[](raw_t& o) {Arr2D<unsigned char>* tmp = new Arr2D<unsigned char>(o.lockflag,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("icpp",[](raw_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.icpp,MAXSAT,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("off",[](raw_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.off,MAXSAT);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("prCA",[](raw_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.prCA,MAXSAT,MAXSAT);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("dpCA",[](raw_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dpCA,MAXSAT);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("halfc",[](raw_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.halfc,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
@@ -2310,13 +2332,10 @@ PYBIND11_MODULE(pyrtklib5, m) {
     py::class_<strconv_t>(m,"strconv_t").def(py::init())
         .def_readwrite("itype",&strconv_t::itype)
         .def_readwrite("otype",&strconv_t::otype)
-        .def_readwrite("nmsg",&strconv_t::nmsg)
         .def_readwrite("stasel",&strconv_t::stasel)
         .def_readwrite("rtcm",&strconv_t::rtcm)
         .def_readwrite("raw",&strconv_t::raw)
         .def_readwrite("out",&strconv_t::out)
-        .def_property_readonly("msgs",[](strconv_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.msgs,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("tint",[](strconv_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.tint,32);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("tick",[](strconv_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.tick,32);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("ephsat",[](strconv_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.ephsat,32);return tmp;},py::return_value_policy::reference)
         .def_property_readonly("ptr",[](strconv_t& o){return &o;},py::return_value_policy::reference);
@@ -2468,6 +2487,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.def("tropmapf",static_cast<double(*)(gtime_t time,Arr1D<double> Spos,Arr1D<double> Sazel,Arr1D<double> Smapfw)>(&tropmapf),"rtklib tropmapf");
     m.def("iontec",static_cast<int(*)(gtime_t time, const nav_t *nav,Arr1D<double> Spos,Arr1D<double> Sazel, int opt,Arr1D<double> Sdelay,Arr1D<double> Svar)>(&iontec),"rtklib iontec");
     m.def("ionocorr",static_cast<int(*)(gtime_t time, const nav_t *nav, int sat,Arr1D<double> Spos,Arr1D<double> Sazel, int ionoopt,Arr1D<double> Sion,Arr1D<double> Svar)>(&ionocorr),"rtklib ionocorr");
+    m.def("ionvtec",static_cast<int(*)(gtime_t time, const nav_t *nav,Arr1D<double> Spos,Arr1D<double> Sazel, double freq,Arr1D<double> Sdelay,Arr1D<double> Svar)>(&ionvtec),"rtklib ionvtec");
     m.def("tropcorr",static_cast<int(*)(gtime_t time, const nav_t *nav,Arr1D<double> Spos,Arr1D<double> Sazel, int tropopt,Arr1D<double> Strp,Arr1D<double> Svar)>(&tropcorr),"rtklib tropcorr");
     m.def("antmodel",static_cast<void(*)(const pcv_t *pcv,Arr1D<double> Sdel,Arr1D<double> Sazel, int opt,Arr1D<double> Sdant)>(&antmodel),"rtklib antmodel");
     m.def("antmodel_sys",static_cast<void(*)(const pcv_t *pcv, int sys,Arr1D<double> Sdel,Arr1D<double> Sazel, int opt,Arr1D<double> Sdant)>(&antmodel_sys),"rtklib antmodel_sys");
@@ -2493,6 +2513,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.def("convrnx",static_cast<int(*)(int format, rnxopt_t *opt, const char *file,std::vector<std::string> Dofile)>(&convrnx),"rtklib convrnx");
     m.def("open_rnxctr",static_cast<int(*)(rnxctr_t *rnx, FileWrapper &Ffp)>(&open_rnxctr),"rtklib open_rnxctr");
     m.def("input_rnxctr",static_cast<int(*)(rnxctr_t *rnx, FileWrapper &Ffp)>(&input_rnxctr),"rtklib input_rnxctr");
+    m.def("pephclk",static_cast<int(*)(gtime_t time, int sat, const nav_t *nav,Arr1D<double> Sdts,Arr1D<double> Svarc)>(&pephclk),"rtklib pephclk");
     m.def("eph2pos",static_cast<void(*)(gtime_t time, const eph_t  *eph,Arr1D<double> Srs,Arr1D<double> Sdts,Arr1D<double> Svar)>(&eph2pos),"rtklib eph2pos");
     m.def("geph2pos",static_cast<void(*)(gtime_t time, const geph_t *geph,Arr1D<double> Srs,Arr1D<double> Sdts,Arr1D<double> Svar)>(&geph2pos),"rtklib geph2pos");
     m.def("seph2pos",static_cast<void(*)(gtime_t time, const seph_t *seph,Arr1D<double> Srs,Arr1D<double> Sdts,Arr1D<double> Svar)>(&seph2pos),"rtklib seph2pos");
@@ -2536,7 +2557,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.def("input_rtcm2f",static_cast<int(*)(rtcm_t *rtcm, FileWrapper &Ffp)>(&input_rtcm2f),"rtklib input_rtcm2f");
     m.def("input_rtcm3f",static_cast<int(*)(rtcm_t *rtcm, FileWrapper &Ffp)>(&input_rtcm3f),"rtklib input_rtcm3f");
     m.def("readsol",static_cast<int(*)(std::vector<std::string> Dfiles, int nfile, solbuf_t *sol)>(&readsol),"rtklib readsol");
-    m.def("readsolt",static_cast<int(*)(std::vector<std::string> Dfiles, int nfile, gtime_t ts, gtime_t te, double tint, int qflag, solbuf_t *sol)>(&readsolt),"rtklib readsolt");
+    m.def("readsolt",static_cast<int(*)(std::vector<std::string> Dfiles, int nfile, gtime_t ts, gtime_t te, double tint, int qflag, int mean, solbuf_t *sol)>(&readsolt),"rtklib readsolt");
     m.def("readsolstat",static_cast<int(*)(std::vector<std::string> Dfiles, int nfile, solstatbuf_t *statbuf)>(&readsolstat),"rtklib readsolstat");
     m.def("readsolstatt",static_cast<int(*)(std::vector<std::string> Dfiles, int nfile, gtime_t ts, gtime_t te, double tint, solstatbuf_t *statbuf)>(&readsolstatt),"rtklib readsolstatt");
     m.def("outprcopts",static_cast<int(*)(Arr1D<uint8_t> Sbuff, const prcopt_t *opt)>(&outprcopts),"rtklib outprcopts");
@@ -2551,8 +2572,9 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.def("outnmea_gga",static_cast<int(*)(Arr1D<uint8_t> Sbuff, const sol_t *sol)>(&outnmea_gga),"rtklib outnmea_gga");
     m.def("outnmea_gsa",static_cast<int(*)(Arr1D<uint8_t> Sbuff, const sol_t *sol, const ssat_t *ssat)>(&outnmea_gsa),"rtklib outnmea_gsa");
     m.def("outnmea_gsv",static_cast<int(*)(Arr1D<uint8_t> Sbuff, const sol_t *sol, const ssat_t *ssat)>(&outnmea_gsv),"rtklib outnmea_gsv");
-    m.def("convkml",static_cast<int(*)(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg,Arr1D<double> Soffset, int tcolor, int pcolor, int outalt, int outtime)>(&convkml),"rtklib convkml");
-    m.def("convgpx",static_cast<int(*)(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg,Arr1D<double> Soffset, int outtrk, int outpnt, int outalt, int outtime)>(&convgpx),"rtklib convgpx");
+    m.def("convkml",static_cast<int(*)(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg, int mean, const char *name,Arr1D<double> Soffset, int tcolor, int pcolor, int outalt, int outtime)>(&convkml),"rtklib convkml");
+    m.def("convgpx",static_cast<int(*)(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg, int mean, const char *name,Arr1D<double> Soffset, int outtrk, int outpnt, int outalt, int outtime)>(&convgpx),"rtklib convgpx");
+    m.def("convcsv",static_cast<int(*)(const char *infile, const char *outfile, gtime_t ts, gtime_t te, double tint, int qflg, int mean, const char *name,Arr1D<double> Soffset, int outalt, int outtime, int outorder)>(&convcsv),"rtklib convcsv");
     m.def("sbsoutmsg",static_cast<void(*)(FileWrapper &Ffp, sbsmsg_t *sbsmsg)>(&sbsoutmsg),"rtklib sbsoutmsg");
     m.def("sbsdecodemsg",static_cast<int(*)(gtime_t time, int prn,Arr1D<uint32_t> Swords, sbsmsg_t *sbsmsg)>(&sbsdecodemsg),"rtklib sbsdecodemsg");
     m.def("sbssatcorr",static_cast<int(*)(gtime_t time, int sat, const nav_t *nav,Arr1D<double> Srs,Arr1D<double> Sdts,Arr1D<double> Svar)>(&sbssatcorr),"rtklib sbssatcorr");
@@ -2571,16 +2593,15 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.def("lambda_search",static_cast<int(*)(int n, int m,Arr1D<double> Sa,Arr1D<double> SQ,Arr1D<double> SF,Arr1D<double> Ss)>(&lambda_search),"rtklib lambda_search");
     m.def("pntpos",static_cast<int(*)(const obsd_t *obs, int n, const nav_t *nav, const prcopt_t *opt, sol_t *sol,Arr1D<double> Sazel, ssat_t *ssat,Arr1D<char> Smsg)>(&pntpos),"rtklib pntpos");
     m.def("rtkoutstat",static_cast<int(*)(rtk_t *rtk, int level,Arr1D<char> Sbuff)>(&rtkoutstat),"rtklib rtkoutstat");
-    m.def("pppoutstat",static_cast<int(*)(rtk_t *rtk,Arr1D<char> Sbuff)>(&pppoutstat),"rtklib pppoutstat");
+    m.def("pppoutstat",static_cast<int(*)(rtk_t *rtk,Arr1D<char> Sbuff, int level)>(&pppoutstat),"rtklib pppoutstat");
     m.def("ppp_ar",static_cast<int(*)(rtk_t *rtk, const obsd_t *obs, int n,Arr1D<int> Sexc, const nav_t *nav,Arr1D<double> Sazel,Arr1D<double> Sx,Arr1D<double> SP)>(&ppp_ar),"rtklib ppp_ar");
     m.def("postpos",static_cast<int(*)(gtime_t ts, gtime_t te, double ti, double tu, const prcopt_t *popt, const solopt_t *sopt, const filopt_t *fopt,std::vector<std::string> Dinfile, int n, const char *outfile, const char *rov, const char *base)>(&postpos),"rtklib postpos");
     m.def("getstapos",static_cast<int(*)(const char *file, const char *name,Arr1D<double> Sr)>(&getstapos),"rtklib getstapos");
-    m.def("strsvrstart",static_cast<int(*)(strsvr_t *svr,Arr1D<int> Sopts,Arr1D<int> Sstrs,std::vector<std::string> Dpaths,std::vector<std::string> Dlogs,std::vector<std::vector<strconv_t>> Dconv,std::vector<std::string> Dcmds,std::vector<std::string> Dcmds_priodic,Arr1D<double> Snmeapos)>(&strsvrstart),"rtklib strsvrstart");
+    m.def("strsvrstart",static_cast<int(*)(strsvr_t *svr,Arr1D<int> Sopts,Arr1D<int> Sstrs,std::vector<std::string> Dpaths,std::vector<std::string> Dlogs,std::vector<std::vector<strconv_t>> Dconv,std::vector<std::string> Dcmds,std::vector<std::string> Dcmds_periodic,Arr1D<double> Snmeapos)>(&strsvrstart),"rtklib strsvrstart");
     m.def("strsvrstop",static_cast<void(*)(strsvr_t *svr,std::vector<std::string> Dcmds)>(&strsvrstop),"rtklib strsvrstop");
     m.def("strsvrstat",static_cast<void(*)(strsvr_t *svr,Arr1D<int> Sstat,Arr1D<int> Slog_stat,Arr1D<int> Sbyte,Arr1D<int> Sbps,Arr1D<char> Smsg)>(&strsvrstat),"rtklib strsvrstat");
     m.def("rtksvrstart",static_cast<int(*)(rtksvr_t *svr, int cycle, int buffsize,Arr1D<int> Sstrs,std::vector<std::string> Dpaths,Arr1D<int> Sformats, int navsel,std::vector<std::string> Dcmds,std::vector<std::string> Dcmds_periodic,std::vector<std::string> Drcvopts, int nmeacycle, int nmeareq,Arr1D<double> Snmeapos, prcopt_t *prcopt, solopt_t *solopt, stream_t *moni,Arr1D<char> Serrmsg)>(&rtksvrstart),"rtklib rtksvrstart");
     m.def("rtksvrstop",static_cast<void(*)(rtksvr_t *svr,std::vector<std::string> Dcmds)>(&rtksvrstop),"rtklib rtksvrstop");
-    m.def("rtksvrostat",static_cast<int(*)(rtksvr_t *svr, int type, gtime_t *time,Arr1D<int> Ssat,Arr1D<double> Saz,Arr1D<double> Sel,std::vector<std::vector<int>> Dsnr,Arr1D<int> Svsat)>(&rtksvrostat),"rtklib rtksvrostat");
     m.def("rtksvrsstat",static_cast<void(*)(rtksvr_t *svr,Arr1D<int> Ssstat,Arr1D<char> Smsg)>(&rtksvrsstat),"rtklib rtksvrsstat");
     m.def("dl_readurls",static_cast<int(*)(const char *file,std::vector<std::string> Dtypes, int ntype, url_t *urls, int nmax)>(&dl_readurls),"rtklib dl_readurls");
     m.def("dl_readstas",static_cast<int(*)(const char *file,std::vector<std::string> Dstas, int nmax)>(&dl_readstas),"rtklib dl_readstas");
@@ -2667,7 +2688,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.def("readsp3",&readsp3,"rtklib readsp3");
     m.def("readsap",&readsap,"rtklib readsap");
     m.def("readdcb",&readdcb,"rtklib readdcb");
-    m.def("code2bias_ix",&code2bias_ix,"rtklib code2bias_ix");
+    m.def("code2bias",&code2bias,"rtklib code2bias");
     m.def("tle_read",&tle_read,"rtklib tle_read");
     m.def("tle_name_read",&tle_name_read,"rtklib tle_name_read");
     m.def("init_raw",&init_raw,"rtklib init_raw");
