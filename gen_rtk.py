@@ -441,6 +441,62 @@ content = content.replace('new Arr1D<short>(o.y,-1)', 'new Arr1D<short>(const_ca
 # NFREQ is overridden on the compiler command line (-DNFREQ, see CMakeLists.txt):
 # the header literal would silently disagree with the compiled struct layout.
 content = content.replace('m.attr("NFREQ")=3;', 'm.attr("NFREQ")=NFREQ;')
+
+# ---------------------------------------------------------------------------
+# demo5 adaptations that used to live as an undocumented hand merge in
+# pyrtklib5.cpp. They are applied here so that the committed pyrtklib5.cpp is
+# exactly: this generator's output + the '==== HANDMERGE ====' blocks that
+# merge_handmerge.py re-injects. Regenerate with `python merge_handmerge.py`.
+# ---------------------------------------------------------------------------
+# 1. functions whose C source is not part of this rtksrc tree
+SKIP_FUNCS = ['input_cnavf', 'input_tersusf', 'input_cnav', 'input_tersus']
+for name in SKIP_FUNCS:
+	content = re.sub(r'extern [^\n]*\b%s\s*\([^{]*\{.*?\n\}\n' % name, '', content, flags=re.DOTALL)
+	content = re.sub(r'[ \t]*m\.def\("%s",[^\n]*\n' % name, '', content)
+# 2. macros the header parser mistakes for constants
+content = re.sub(r'[ \t]*m\.attr\("(NULL|EXPORT|THREADLOCAL|[^"]*\([^"]*)"\)[^\n]*\n', '', content)
+# 3. char*/int16_t* struct members declared const in rtklib.h
+content = content.replace('new Arr1D<int16_t>(o.y,-1)', 'new Arr1D<int16_t>(const_cast<int16_t*>(o.y),-1)')
+content = content.replace('[](opt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.name,-1)',
+                          '[](opt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(const_cast<char*>(o.name),-1)')
+content = content.replace('[](opt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.comment,-1)',
+                          '[](opt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(const_cast<char*>(o.comment),-1)')
+# 4. self-referential struct pointer (gisd_t *next)
+content = content.replace('Arr1D<struct>', 'Arr1D<gisd_t>')
+# 5. 3-D array parameters the generator cannot express: pass them as flat Arr1D
+content = content.replace(
+	', const double odisp[2][11][3],Arr1D<double> Sdr){\n    const double *rr = Srr.src;\n',
+	',Arr1D<double> Sodisp,Arr1D<double> Sdr){\n    const double *rr = Srr.src;\n'
+	'    const double (*odisp)[11][3] = reinterpret_cast<const double(*)[11][3]>(Sodisp.src);\n')
+content = content.replace('tidedisp(tutc, rr, opt, erp, odisp[2][11][3], dr);', 'tidedisp(tutc, rr, opt, erp, odisp, dr);')
+content = content.replace('const erp_t *erp, const double odisp[2][11][3],Arr1D<double> Sdr)>(&tidedisp)',
+                          'const erp_t *erp,Arr1D<double> Sodisp,Arr1D<double> Sdr)>(&tidedisp)')
+# 6. wrappers for char* / 3-D array outputs the generator binds as raw pointers
+EXTRA_WRAPPERS = '''extern void satno2id(int sat,Arr1D<char> Sid){
+    char *id = Sid.src;
+    satno2id(sat, id);
+
+}
+extern int  readblq(const char *file, const char *sta,Arr1D<double> Sodisp){
+    double (*odisp)[11][3] = reinterpret_cast<double(*)[11][3]>(Sodisp.src);
+    auto tmp = readblq(file, sta, odisp);
+    return tmp;
+}
+'''
+content = content.replace('PYBIND11_MODULE(pyrtklib5, m) {\n', EXTRA_WRAPPERS + 'PYBIND11_MODULE(pyrtklib5, m) {\n', 1)
+content = content.replace('    m.def("satno2id",&satno2id,"rtklib satno2id");\n',
+	'    m.def("satno2id",static_cast<void(*)(int sat,Arr1D<char> Sid)>(&satno2id),"rtklib satno2id");\n')
+content = content.replace('    m.def("readblq",&readblq,"rtklib readblq");\n',
+	'    m.def("readblq",static_cast<int(*)(const char *file, const char *sta,Arr1D<double> Sodisp)>(&readblq),"rtklib readblq");\n')
+# 7. FILE* handling through FileWrapper (cbind.h)
+content = content.replace('PYBIND11_MODULE(pyrtklib5, m) {\n',
+'''PYBIND11_MODULE(pyrtklib5, m) {
+    py::class_<FileWrapper>(m, "FileWrapper")
+    .def(py::init<const char*, const char*>())
+    .def("get", &FileWrapper::get, py::return_value_policy::reference)
+    .def("cleareof", &FileWrapper::cleareof);
+
+''', 1)
 content = content.replace('strsvr_t& o,Arr1D<char>arr','strsvr_t& o,Arr1D<unsigned char>arr')
 with open('pyrtklib5/pyrtklib5_pre.cpp','w') as f:
 	f.write(header+content+footer)
