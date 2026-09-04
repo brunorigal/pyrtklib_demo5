@@ -1,0 +1,6 @@
+build/
+*.egg-info/
+__pycache__/
+*.so
+pyrtklib5.cpython-*.so/
+pyrtklib5/pyrtklib5_pre.cpp
