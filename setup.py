@@ -8,6 +8,21 @@ import subprocess
 
 pyinc = distutils.sysconfig.get_python_inc()
 
+def git_sha(repo):
+    """Commit of the bindings repository, '-dirty' if the tree has local edits,
+    'unknown' outside a git checkout. Exported as pyrtklib5.GIT_SHA so results
+    can be traced to an exact build (the version strings are hand-edited)."""
+    try:
+        sha = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                                      stderr=subprocess.DEVNULL).decode().strip()
+        dirty = subprocess.call(["git", "-C", str(repo), "diff", "--quiet", "HEAD", "--",
+                                 "pyrtklib5", "setup.py", "gen_rtk.py"],
+                                stderr=subprocess.DEVNULL) != 0
+        return sha + ("-dirty" if dirty else "")
+    except Exception:
+        return "unknown"
+
+
 class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
@@ -33,7 +48,8 @@ class BuildExt(build_ext):
         cmake_args = [
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + str(extdir.parent.absolute())+"/pyrtklib5",
             "-DCMAKE_BUILD_TYPE=" + config,
-            "-DPYTHON_INCLUDE_DIR="+pyinc
+            "-DPYTHON_INCLUDE_DIR="+pyinc,
+            "-DPYRTKLIB5_GIT_SHA=" + git_sha(cwd),
         ]
         if self.debug:
             cmake_args.append("-DDEBUG=ON")

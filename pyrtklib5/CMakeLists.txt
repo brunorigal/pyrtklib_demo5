@@ -15,7 +15,27 @@ include_directories(${PYBIND11_INCLUDE_DIRS})
 
 
 
-ADD_DEFINITIONS(-DENACMP -DENAGAL -DENAGLO -DENAQZS -DENAIRN -DTRACE -DDLL -DEBUG -DWIN_DLL -DTRACE)
+# Number of carrier frequency slots per satellite. rtklib.h guards NFREQ with
+# #ifndef, so this override needs no header edit. 5 is the useful maximum:
+# code2idx() never returns an index above 4 (Galileo E1/E5b/E5a/E6/E5ab and
+# BeiDou B1/B2/B2a/B3/B2ab), so slots 5..MAXFREQ-1 are unreachable (MAXFREQ=6).
+# Must reach every translation unit - ssat_t/obsd_t are sized by it, and a
+# partial rebuild fails as silent memory corruption, not as a link error.
+set(NFREQ 5 CACHE STRING "Number of RTKLIB carrier frequency slots (max useful: 5)")
+# -DWIN_DLL is inherited from upstream and harmless with GCC (rtkcmn.c tests
+# defined(WIN_DLL)||defined(DLL)); kept so the build stays identical to upstream.
+ADD_DEFINITIONS(-DENACMP -DENAGAL -DENAGLO -DENAQZS -DENAIRN -DTRACE -DDLL -DEBUG -DWIN_DLL -DNFREQ=${NFREQ})
+# pyrtklib (RTKLIB 2.4.3) and pyrtklib5 register the same C++ type names
+# (FileWrapper, gtime_t, obsd_t, ...) and pybind11 shares one type registry
+# between every module built with the same internals id: importing both in one
+# interpreter fails with "generic_type: type FileWrapper is already registered".
+# A private internals version gives this module its own registry. Any value
+# > 4 selects the same code paths pybind11 uses for Python >= 3.12.
+ADD_DEFINITIONS(-DPYBIND11_INTERNALS_VERSION=105)
+# Git commit of this repository, exported as pyrtklib5.GIT_SHA (see setup.py).
+if(DEFINED PYRTKLIB5_GIT_SHA AND NOT "${PYRTKLIB5_GIT_SHA}" STREQUAL "")
+    ADD_DEFINITIONS(-DPYRTKLIB5_GIT_SHA="${PYRTKLIB5_GIT_SHA}")
+endif()
 
 
 if(MSVC)

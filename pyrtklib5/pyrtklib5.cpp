@@ -1109,7 +1109,9 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.attr("TSYS_QZS")=4;
     m.attr("TSYS_CMP")=5;
     m.attr("TSYS_IRN")=6;
-    m.attr("NFREQ")=3;
+    /* ==== BEGIN HANDMERGE: NFREQ ==== */
+    m.attr("NFREQ")=NFREQ; /* the compiled value (-DNFREQ), never the header literal */
+    /* ==== END HANDMERGE ==== */
     m.attr("NFREQGLO")=2;
     m.attr("NEXOBS")=0;
     m.attr("MINPRNGPS")=1;
@@ -1419,6 +1421,13 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.attr("P2_55")=2.775557561562891E-17;
     m.attr("VER_RTKLIB")="EX";
     m.attr("PATCH_LEVEL")="2.5.0";
+    /* ==== BEGIN HANDMERGE: GIT_SHA ==== */
+#ifdef PYRTKLIB5_GIT_SHA
+    m.attr("GIT_SHA")=PYRTKLIB5_GIT_SHA;
+#else
+    m.attr("GIT_SHA")="unknown";
+#endif
+    /* ==== END HANDMERGE ==== */
     bindArr1D<gtime_t>(m,"gtime_t");
     bindArr2D<gtime_t>(m,"gtime_t");
     bindArr1D<obsd_t>(m,"obsd_t");

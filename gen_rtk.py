@@ -438,6 +438,9 @@ for i in functionDouble:
 for i in function:
 	content += gen_func(i)
 content = content.replace('new Arr1D<short>(o.y,-1)', 'new Arr1D<short>(const_cast<short*>(o.y),-1)')
+# NFREQ is overridden on the compiler command line (-DNFREQ, see CMakeLists.txt):
+# the header literal would silently disagree with the compiled struct layout.
+content = content.replace('m.attr("NFREQ")=3;', 'm.attr("NFREQ")=NFREQ;')
 content = content.replace('strsvr_t& o,Arr1D<char>arr','strsvr_t& o,Arr1D<unsigned char>arr')
 with open('pyrtklib5/pyrtklib5_pre.cpp','w') as f:
 	f.write(header+content+footer)
