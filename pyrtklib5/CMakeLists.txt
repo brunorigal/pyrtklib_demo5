@@ -76,7 +76,11 @@ if(LIBRARY)
 else()
     AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/rtksrc RTK_src)
     AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/rtksrc/rcv rcv_src)
-    add_library(pyrtklib5 MODULE ${RTK_src} ${rcv_src} pyrtklib5.cpp) 
+    # rtkpos.c is compiled through relpos_steps.c (#include "rtkpos.c"), which
+    # needs its static helpers; compiling it a second time would define
+    # rtkinit/rtkpos/... twice.
+    list(REMOVE_ITEM RTK_src ${PROJECT_SOURCE_DIR}/rtksrc/rtkpos.c)
+    add_library(pyrtklib5 MODULE ${RTK_src} ${rcv_src} pyrtklib5.cpp)
     # pybind11_add_module(pyrtklib NO_EXTRAS ${RTK_src} ${rcv_src} pyrtklib.cpp)
     if(WIN32)
         set_target_properties(pyrtklib5 PROPERTIES PREFIX "" SUFFIX ".pyd")
