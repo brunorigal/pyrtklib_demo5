@@ -94,6 +94,7 @@ static const int navsys[RNX_NUMSYS]={     /* system codes */
 
 // Supported obs-type by RINEX version.
 static const char ver3code[][MAXCODE] = {
+  // clang-format off
   // 0........1.........2.........3.........4.........5.........6.........7
   // 1111111111111222222222255577766666668882266333115559999155567778844466 CODE
   // CPWYMNSLEABXZCDSLXPWYMNIQXIQXABCXZSLIQXIQIQIQXIQABCABCXDDPZEDPZDPABXDP
@@ -104,8 +105,10 @@ static const char ver3code[][MAXCODE] = {
     "0......................000............................................", // SBS
     ".4...455.4.45....1.......41114..15....41111............444..44444...55", // BDS
     ".........................3......................3333333..............."  // IRN
+  // clang-format on
 };
 static const char ver4code[][MAXCODE] = {
+  // clang-format off
   // 0........1.........2.........3.........4.........5.........6.........7
   // 1111111111111222222222255577766666668882266333115559999155567778844466 CODE
   // CPWYMNSLEABXZCDSLXPWYMNIQXIQXABCXZSLIQXIQIQIQXIQABCABCXDDPZEDPZDPABXDP
@@ -116,6 +119,7 @@ static const char ver4code[][MAXCODE] = {
     "0......................000............................................", // SBS
     ".0....00...00....0.......0000...00....00000............000..00000...00", // BDS
     ".1.........1.............0......................00000001.............."  // IRN
+  // clang-format on
 };
 
 /* convert RINEX obs-type ver.3 -> ver.2 -------------------------------------*/
@@ -337,14 +341,9 @@ static void close_strfile(strfile_t *str)
 {
     trace(3,"close_strfile:\n");
     
-    if (str->format==STRFMT_RTCM2||str->format==STRFMT_RTCM3) {
-        if (str->fp) fclose(str->fp);
-    }
-    else if (str->format<=MAXRCVFMT) {
-        if (str->fp) fclose(str->fp);
-    }
-    else if (str->format==STRFMT_RINEX) {
-        if (str->fp) fclose(str->fp);
+    if (str->fp) {
+      fclose(str->fp);
+      str->fp = NULL;
     }
 }
 /* set format and files in RINEX options comments ----------------------------*/
@@ -391,7 +390,8 @@ static void setopt_obstype(const uint8_t *codes, const uint8_t *types, int sys,
                            rnxopt_t *opt)
 {
     const char type_str[]="CLDS";
-    char type[16],*id,ver;
+    const char *id;
+    char type[16],ver;
     int i,j,k,idx;
     
     trace(3,"setopt_obstype: sys=%d\n",sys);
@@ -625,7 +625,7 @@ static void update_stainf(strfile_t *str)
 /* dump station list ---------------------------------------------------------*/
 static void dump_stas(const strfile_t *str)
 {
-#if 1 /* for debug */
+ // #ifdef RTK_DISABLED  // For debug
     stas_t *p;
     double pos[3];
     char s1[40],s2[40];
@@ -644,7 +644,7 @@ static void dump_stas(const strfile_t *str)
               p->sta.rectype,pos[0]*R2D,pos[1]*R2D,pos[2],p->sta.deltype,
               p->sta.del[0],p->sta.del[1],p->sta.del[2]);
     }
-#endif
+  // #endif
 }
 /* add half-cycle ambiguity list ---------------------------------------------*/
 static int add_halfc(strfile_t *str, int sat, int idx, gtime_t time)
@@ -701,7 +701,8 @@ static void update_halfc(strfile_t *str, obsd_t *obs)
 /* dump half-cycle ambiguity list --------------------------------------------*/
 static void dump_halfc(const strfile_t *str)
 {
-#if 0 /* for debug */
+    (void)str;
+#ifdef RTK_DISABLED
     halfc_t *p;
     char s0[8],s1[40],s2[40],*stats[]={"ADD","SUB","NON"};
     int i,j;

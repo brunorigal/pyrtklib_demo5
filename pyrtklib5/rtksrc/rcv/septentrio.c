@@ -449,11 +449,10 @@ static int svid2sat(int svid)
     if (svid <=  68) return satno(SYS_GLO, svid-38);
     if (svid <=  70) return 0;
     if (svid <= 106) return satno(SYS_GAL, svid-70);
-    if (svid <= 119) return 0;
+    if (svid <= 119) return 0; // L-Band (MMS) Satellite
     if (svid <= 140) return satno(SYS_SBS, svid);
     if (svid <= 180) return satno(SYS_CMP, svid-140);
-    if (svid <= 187) return satno(SYS_QZS, svid-180+192);
-    if (svid <= 190) return 0; /* L-Band (MMS) Satellite */
+    if (svid <= 190) return satno(SYS_QZS, svid-180+192);
     if (svid <= 197) return satno(SYS_IRN, svid-190);
     if (svid <= 215) return satno(SYS_SBS, svid-57);
     if (svid <= 222) return satno(SYS_IRN, svid-208);
@@ -507,14 +506,14 @@ static uint8_t sig_tbl[SBF_MAXSIG+1][2] = { /* system, obs-code */
 
 static const int Meas3SigIdx2SignalType_Default[7][16] =
     {
-        /* Idx:        0         1          2          3           4         5           6          7                 8          9         10         11         12         13         14         15       */
-        /* GPS */ {CODE_L1C, CODE_L2L,   CODE_L5Q,  CODE_L1W,  CODE_L2W,  CODE_L1L, CODE_NONE, CODE_NONE,        CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
-        /* GLO */ {CODE_L1C, CODE_L2C,   CODE_L1P,  CODE_L2P,  CODE_L3Q, CODE_NONE, CODE_NONE, CODE_NONE,        CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
-        /* GAL */ {CODE_L1C, CODE_L5Q,   CODE_L7Q,  CODE_L6C,  CODE_L8Q, CODE_NONE, CODE_NONE, CODE_NONE,        CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
-        /* BDS */ {CODE_L2I, CODE_L7I,   CODE_L6I,  CODE_L1P,  CODE_L5P,  CODE_L7D, CODE_NONE, CODE_NONE,        CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
-        /* SBA */ {CODE_L1C, CODE_L5I,  CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE,        CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
-        /* QZS */ {CODE_L1C, CODE_L2L,   CODE_L5Q,  CODE_L6L,  CODE_L1L,  CODE_L1Z,  CODE_L5P, CODE_NONE/*L1CB*/,CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
-        /* IRN */ {CODE_L5A, CODE_L1E,   CODE_L9A, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE,        CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE}
+        /* Idx:        0         1          2          3           4         5           6          7          8          9         10         11         12         13         14         15       */
+        /* GPS */ {CODE_L1C, CODE_L2L,   CODE_L5Q,  CODE_L1W,  CODE_L2W,  CODE_L1L, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
+        /* GLO */ {CODE_L1C, CODE_L2C,   CODE_L1P,  CODE_L2P,  CODE_L3Q, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
+        /* GAL */ {CODE_L1C, CODE_L5Q,   CODE_L7Q,  CODE_L6C,  CODE_L8Q, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
+        /* BDS */ {CODE_L2I, CODE_L7I,   CODE_L6I,  CODE_L1P,  CODE_L5P,  CODE_L7D, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
+        /* SBA */ {CODE_L1C, CODE_L5I,  CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
+        /* QZS */ {CODE_L1C, CODE_L2L,   CODE_L5Q,  CODE_L6L,  CODE_L1L,  CODE_L1Z,  CODE_L5P,  CODE_L1E, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE},
+        /* IRN */ {CODE_L5A, CODE_L1E,   CODE_L9A, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE, CODE_NONE}
 };
 
 static int sigPriority(int sys, int idx, const char *opt, uint8_t *code)
@@ -583,7 +582,7 @@ static void init_obsd(gtime_t time, int sat, obsd_t *data)
 
     for (i = 0; i < NFREQ+NEXOBS; i++) {
         data->L[i] = data->P[i] = 0.0;
-        data->D[i] = data->SNR[i] = 0.0;
+        data->D[i] = data->SNR[i] = 0.0f;
         data->Lstd[i] = data->Pstd[i] = 0.0;
         data->LLI[i] = 0;
         data->code[i] = CODE_NONE;
@@ -667,7 +666,7 @@ static int flushobuf(raw_t *raw) {
         raw->obuf.data[i].time.sec = 0;
         for (j = 0; j < NFREQ + NEXOBS; j++) {
             raw->obuf.data[i].L[j] = raw->obuf.data[i].P[j] = 0.0;
-            raw->obuf.data[i].D[j] = raw->obuf.data[i].SNR[j] = 0.0;
+            raw->obuf.data[i].D[j] = raw->obuf.data[i].SNR[j] = 0.0f;
             raw->obuf.data[i].Lstd[j] = raw->obuf.data[i].Pstd[j] = 0.0;
             raw->obuf.data[i].LLI[j] = 0;
             raw->obuf.data[i].code[j] = CODE_NONE;
@@ -787,7 +786,7 @@ static int decode_measepoch(raw_t *raw)
         }
         if (U1(p+15) != 255) {
             S1 = U1(p+15)*0.25 + ((sig==1 || sig==2) ? 0.0 : 10.0);
-            raw->obuf.data[n].SNR[idx] = S1;
+            raw->obuf.data[n].SNR[idx] = (float)S1;
         }
         raw->obuf.data[n].code[idx] = code;
 
@@ -815,7 +814,7 @@ static int decode_measepoch(raw_t *raw)
             }
             if (U1(p+2) != 255) {
                 S2 = U1(p+2)*0.25 + ((sig==1 || sig==2) ? 0.0 : 10.0);
-                raw->obuf.data[n].SNR[idx] = S2;
+                raw->obuf.data[n].SNR[idx] = (float)S2;
             }
             if (P1!=0.0 && (getbits(p+3, 5, 3)!=-4 || U2(p+6)!=0)) {
                 P2 = P1+getbits(p+3, 5, 3)*65.536 + U2(p+6)*0.001;
@@ -910,7 +909,7 @@ static int decode_measepochextra(raw_t *raw)
 
         if ((revision >= 3) && (sbLen >= 16)) {  /* later revision contains high-resolution extension for CN0 values*/
             misc = U1(p_chan+15);
-            raw->obuf.data[n].SNR[idx] += (misc & 0x7) * 0.03125;
+            raw->obuf.data[n].SNR[idx] += (float)((misc & 0x7) * 0.03125);
         }
     }
 
@@ -1087,7 +1086,7 @@ static int decode_meas3ranges(raw_t *raw) {
                         freqMaster = code2freq(Meas3_NavSys[navsys], codeMaster, glofnc);
                         double pr = prbase + ((double)pr_lsb + 4294967296.0 * (double)prMsb) * .001;
                         raw->obuf.data[n].P[masterFreqIndex] = pr;
-                        raw->obuf.data[n].SNR[masterFreqIndex] = CN0 + 24.0;
+                        raw->obuf.data[n].SNR[masterFreqIndex] = (float)(CN0 + 24.0);
                         raw->obuf.data[n].code[masterFreqIndex] = codeMaster;
                         if (cmc != 0)
                             raw->obuf.data[n].L[masterFreqIndex] = pr / (CLIGHT/freqMaster) - 131.072 + (double)cmc * .001;
@@ -1133,7 +1132,7 @@ static int decode_meas3ranges(raw_t *raw) {
                         uint8_t isGPSPCode = (navsys == 0) && (codeMaster == CODE_L1W || codeMaster == CODE_L2W);
 
                         raw->obuf.data[n].P[masterFreqIndex] = ((double)prLsb + 4294967296.0 * (double)prMsb) * .001;
-                        raw->obuf.data[n].SNR[masterFreqIndex] = isGPSPCode ? CN0 : CN0 + 10.0;
+                        raw->obuf.data[n].SNR[masterFreqIndex] = isGPSPCode ? (float)CN0 : (float)(CN0 + 10.0);
                         raw->obuf.data[n].code[masterFreqIndex] = codeMaster;
                         if (cmc != 0)
                             raw->obuf.data[n].L[masterFreqIndex] = raw->obuf.data[n].P[masterFreqIndex] / (CLIGHT/freqMaster) - 2097.152 + (double)cmc * .001;
@@ -1168,7 +1167,7 @@ static int decode_meas3ranges(raw_t *raw) {
                         raw->obuf.data[n].P[masterFreqIndex] = master_reference->P[masterFreqIndex] +
                                                        ((int64_t)sbf->meas3_refEpoch.prRate[navsys][svid] * 64 * (int32_t)(TOW % refEpochInterval) / 1000) * .001 +
                                                        (double)pr * .001 - 65.536;
-                        raw->obuf.data[n].SNR[masterFreqIndex] = master_reference->SNR[masterFreqIndex] - 4.0 + CN0;
+                        raw->obuf.data[n].SNR[masterFreqIndex] = (float)(master_reference->SNR[masterFreqIndex] - 4.0 + CN0);
                         raw->obuf.data[n].code[masterFreqIndex] = codeMaster;
                         if (cmc != 0)
                             raw->obuf.data[n].L[masterFreqIndex] = (raw->obuf.data[n].P[masterFreqIndex] - master_reference->P[masterFreqIndex]) / (CLIGHT/freqMaster) +
@@ -1199,7 +1198,7 @@ static int decode_meas3ranges(raw_t *raw) {
                         raw->obuf.data[n].P[masterFreqIndex] = masterReference->P[masterFreqIndex] + ((int64_t)sbf->meas3_refEpoch.prRate[navsys][svid] * 64 * (int32_t)(TOW % refEpochInterval) / 1000) * .001 + (double)pr * .001 - 8.192;
                         if (cmc != 0)
                             raw->obuf.data[n].L[masterFreqIndex] = (raw->obuf.data[n].P[masterFreqIndex] - masterReference->P[masterFreqIndex]) / (CLIGHT/freqMaster) + masterReference->L[masterFreqIndex] - 8.192 + (double)cmc * .001;
-                        raw->obuf.data[n].SNR[masterFreqIndex] = masterReference->SNR[masterFreqIndex] - 1.0 + CN0;
+                        raw->obuf.data[n].SNR[masterFreqIndex] = (float)(masterReference->SNR[masterFreqIndex] - 1.0 + CN0);
                         raw->obuf.data[n].LLI[masterFreqIndex] = masterReference->LLI[masterFreqIndex];
                         raw->lockt[satNo-1][masterFreqIndex] = sbf->meas3_refEpoch.lockt[navsys][svid][masterFreqIndex];
                         raw->obuf.data[n].code[masterFreqIndex] = codeMaster;
@@ -1270,9 +1269,9 @@ static int decode_meas3ranges(raw_t *raw) {
                                                           - 32.768 + cmcRes * .001;
 
                                 if ((navsys == 0) && (codeSlave == CODE_L1W || codeSlave == CODE_L2W))
-                                    raw->obuf.data[n].SNR[slaveFreqIndex] = raw->obuf.data[n].SNR[masterFreqIndex] - 3.0 - CN0;
+                                  raw->obuf.data[n].SNR[slaveFreqIndex] = (float)(raw->obuf.data[n].SNR[masterFreqIndex] - 3.0 - CN0);
                                 else
-                                    raw->obuf.data[n].SNR[slaveFreqIndex] = CN0 + 24.0;
+                                  raw->obuf.data[n].SNR[slaveFreqIndex] = (float)(CN0 + 24.0);
 
                                 raw->obuf.data[n].code[slaveFreqIndex] = codeSlave;
                                 raw->obuf.data[n].LLI[slaveFreqIndex] = (lockTime < raw->lockt[satNo-1][slaveFreqIndex] ? LLI_SLIP : 0) | (lti3 == 0 ? LLI_HALFC : 0);
@@ -1301,9 +1300,9 @@ static int decode_meas3ranges(raw_t *raw) {
                                     raw->obuf.data[n].L[slaveFreqIndex] = raw->obuf.data[n].P[slaveFreqIndex] / (CLIGHT/freqSlave) - 2097.152 + cmc * 0.001;
 
                                 if ((navsys == 0) && (codeSlave == CODE_L1W || codeSlave == CODE_L2W))
-                                    raw->obuf.data[n].SNR[slaveFreqIndex] = CN0;
+                                    raw->obuf.data[n].SNR[slaveFreqIndex] = (float)CN0;
                                 else
-                                    raw->obuf.data[n].SNR[slaveFreqIndex] = CN0 + 10.0;
+                                    raw->obuf.data[n].SNR[slaveFreqIndex] = (float)(CN0 + 10.0);
 
                                 raw->obuf.data[n].code[slaveFreqIndex] = codeSlave;
                                 raw->obuf.data[n].LLI[slaveFreqIndex] = (lockTime < raw->lockt[satNo-1][slaveFreqIndex] ? LLI_SLIP : 0) | (lti4 == 0 ? LLI_HALFC : 0);
@@ -1335,7 +1334,7 @@ static int decode_meas3ranges(raw_t *raw) {
                                                                       (raw->obuf.data[n].L[slaveFreqIndex] - slaveReference->L[slaveRefFreqIdx]) * (CLIGHT/freqSlave)
                                                                       - 2.048 + dPr * 0.001);
 
-                                raw->obuf.data[n].SNR[slaveFreqIndex] = slaveReference->SNR[slaveRefFreqIdx] - 2.0 + CN0;
+                                raw->obuf.data[n].SNR[slaveFreqIndex] = (float)(slaveReference->SNR[slaveRefFreqIdx] - 2.0 + CN0);
 
                                 raw->obuf.data[n].code[slaveFreqIndex] = codeSlave;
                                 raw->obuf.data[n].LLI[slaveFreqIndex] = slaveReference->LLI[slaveRefFreqIdx];
@@ -1513,13 +1512,13 @@ int decode_meas3CN(raw_t* raw)
         masterFreqIndex = sbf->meas3_freqAssignment[navsys][svid][0];
 
         uint8_t mc = (U1(raw->buff + 16 + offset / 2) >> ((offset % 2) * 4)) & 0xf;
-        raw->obuf.data[n].SNR[masterFreqIndex] += mc * 0.0625 - 0.5;
+        raw->obuf.data[n].SNR[masterFreqIndex] += (float)(mc * 0.0625 - 0.5);
         offset++;
         for (int i = 1; i<MEAS3_SIG_MAX; i++) {
             slaveFreqIndex = sbf->meas3_freqAssignment[navsys][svid][i];
             if (slaveFreqIndex < 0)
                 break;
-            raw->obuf.data[n].SNR[slaveFreqIndex] += ((U1(raw->buff + 16 + offset / 2) >> ((offset % 2) * 4)) & 0xf) * .0625 - 0.5;
+            raw->obuf.data[n].SNR[slaveFreqIndex] += (float)(((U1(raw->buff + 16 + offset / 2) >> ((offset % 2) * 4)) & 0xf) * .0625 - 0.5);
             offset++;
         }
     }
@@ -1675,12 +1674,15 @@ static int decode_gpsrawcnav(raw_t *raw, int sys) {
   }
   offset += 8;
   uint8_t prn2 = getbitu(buff, offset, 6);
+  (void)prn2;
   offset += 6;
   uint8_t type = getbitu(buff, offset, 6);
   offset += 8;
   uint32_t tow = getbitu(buff, offset, 17);
+  (void)tow;
   offset += 17;
   uint8_t alert = getbitu(buff, offset, 1);
+  (void)alert;
   offset += 1;
 
   switch (type) {
@@ -1968,7 +1970,7 @@ static int decode_cmpraw(raw_t *raw){
     eph_t eph = {0};
     double ion[8], utc[8];
     uint8_t *p = raw->buff+14, buff[40];
-    int i, id, svid, sat, prn, pgn;
+    int i, id, svid, sat, prn;
 
     if (raw->len < 52) {
         trace(2, "sbf cmpraw length error: len=%d\n", raw->len);
@@ -4088,7 +4090,7 @@ static int decode_sbf(raw_t *raw)
 
             return 0;
         default:
-#if 0 /* debug output */
+#ifdef RTK_DISABLED /* debug output */
             if (raw->outtype) {
                 sprintf(raw->msgtype,"SBF 0x%04X (%4d):",type, raw->len);
             }

@@ -76,7 +76,7 @@
 *                           CODE_L1I -> CODE_L2I for BDS B1I (RINEX 3.04)
 *                           use integer types in stdint.h
 *-----------------------------------------------------------------------------*/
-#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200112L
 #include "rtklib.h"
 
 #define UBXSYNC1    0xB5        /* ubx message sync code 1 */
@@ -123,7 +123,7 @@ typedef enum { false, true } bool;
 #define I1(p) (*((int8_t  *)(p)))
 static uint16_t U2(uint8_t *p) {uint16_t u; memcpy(&u,p,2); return u;}
 static uint32_t U4(uint8_t *p) {uint32_t u; memcpy(&u,p,4); return u;}
-static int32_t  I4(uint8_t *p) {int32_t  u; memcpy(&u,p,4); return u;}
+static int32_t  I4(uint8_t *p) {int32_t  i; memcpy(&i,p,4); return i;}
 static float    R4(uint8_t *p) {float    r; memcpy(&r,p,4); return r;}
 static double   R8(uint8_t *p) {double   r; memcpy(&r,p,8); return r;}
 static double   I8(uint8_t *p) {return I4(p+4)*4294967296.0+U4(p);}
@@ -206,6 +206,7 @@ static int ubx_sig(int sys, int sigid)
         if (sigid==5) return CODE_L2L; /* L2CL */
         if (sigid==8) return CODE_L5I; /* L5I */
         if (sigid==9) return CODE_L5Q; /* L5Q */
+        if (sigid==12) return CODE_L1E; /* L1C/B */
     }
     else if (sys == SYS_CMP) {
         if (sigid==0) return CODE_L2I; /* B1I D1 */
@@ -363,8 +364,8 @@ static int decode_rxmraw(raw_t *raw)
         
         for (j=1;j<NFREQ+NEXOBS;j++) {
             raw->obs.data[n].L[j]=raw->obs.data[n].P[j]=0.0;
-            raw->obs.data[n].D[j]=raw->obs.data[n].SNR[j]=0.0;
-            raw->obs.data[n].Lstd[j]=raw->obs.data[n].Pstd[j]=0.0;
+            raw->obs.data[n].D[j]=raw->obs.data[n].SNR[j]=0.0f;
+            raw->obs.data[n].Lstd[j]=raw->obs.data[n].Pstd[j]=0.0f;
             raw->obs.data[n].LLI[j]=0;
             raw->obs.data[n].code[j]=CODE_NONE;
         }
@@ -524,8 +525,8 @@ static int decode_rxmrawx(raw_t *raw)
             raw->obs.data[n].rcv=0;
             for (k=0;k<NFREQ+NEXOBS;k++) {
                 raw->obs.data[n].L[k]=raw->obs.data[n].P[k]=0.0;
-                raw->obs.data[n].D[k]=raw->obs.data[n].SNR[k]=0.0;
-                raw->obs.data[n].Lstd[k]=raw->obs.data[n].Pstd[k]=0.0;
+                raw->obs.data[n].D[k]=raw->obs.data[n].SNR[k]=0.0f;
+                raw->obs.data[n].Lstd[k]=raw->obs.data[n].Pstd[k]=0.0f;
                 raw->obs.data[n].LLI[k]=0;
                 raw->obs.data[n].code[k]=CODE_NONE;
             }
@@ -533,10 +534,10 @@ static int decode_rxmrawx(raw_t *raw)
         }
         raw->obs.data[j].L[idx]=L;
         raw->obs.data[j].P[idx]=P;
-        raw->obs.data[j].Lstd[idx] = rcvstds ? cpstd * 0.004 : 0;
-        raw->obs.data[j].Pstd[idx] = rcvstds ? 0.01 * pow(2, prstd) : 0.0;
+        raw->obs.data[j].Lstd[idx] = rcvstds ? (float)(cpstd * 0.004) : 0.0f;
+        raw->obs.data[j].Pstd[idx] = rcvstds ? (float)(0.01 * pow(2, prstd)) : 0.0f;
         raw->obs.data[j].D[idx]=(float)D;
-        raw->obs.data[j].SNR[idx]=cn0;
+        raw->obs.data[j].SNR[idx]=(float)cn0;
         raw->obs.data[j].LLI[idx]=(uint8_t)LLI;
         raw->obs.data[j].code[idx]=(uint8_t)code;
         if (L!=0.0) raw->lockflag[sat-1][idx]=0; /* clear slip carry-forward flag if valid phase*/
@@ -675,7 +676,7 @@ static int decode_trkmeas(raw_t *raw)
         if (lock2==0||lock2<raw->lockt[sat-1][0]) raw->lockt[sat-1][1]=1.0;
         raw->lockt[sat-1][0]=lock2;
         
-#if 0 /* for debug */
+#ifdef RTK_DISABLED /* for debug */
         trace(2,"[%2d] qi=%d sys=%d prn=%3d frq=%2d flag=%02X ?=%02X %02X "
               "%02X %02X %02X %02X %02X lock=%3d %3d ts=%10.3f snr=%4.1f "
               "dop=%9.3f adr=%13.3f %6.3f\n",U1(p),qi,U1(p+4),prn,frq,flag,
@@ -693,9 +694,9 @@ static int decode_trkmeas(raw_t *raw)
         raw->obs.data[n].P[0]=tau*CLIGHT;
         raw->obs.data[n].L[0]=-adr;
         raw->obs.data[n].D[0]=(float)dop;
-        raw->obs.data[n].SNR[0]=snr;
+        raw->obs.data[n].SNR[0]=(float)snr;
         raw->obs.data[n].code[0]=sys==SYS_CMP?CODE_L2I:CODE_L1C;
-        raw->obs.data[n].Lstd[0] = rcvstds ? (8 - qi) * 0.004 : 0;
+        raw->obs.data[n].Lstd[0] = rcvstds ? (float)((8 - qi) * 0.004) : 0.0f;
         raw->obs.data[n].LLI[0]=raw->lockt[sat-1][1]>0.0?1:0;
         if (sys==SYS_SBS) { /* half-cycle valid */
             raw->obs.data[n].LLI[0]|=lock2>142?0:2;
@@ -711,8 +712,8 @@ static int decode_trkmeas(raw_t *raw)
         }
         for (j=1;j<NFREQ+NEXOBS;j++) {
             raw->obs.data[n].L[j]=raw->obs.data[n].P[j]=0.0;
-            raw->obs.data[n].D[j]=raw->obs.data[n].SNR[j]=0.0;
-            raw->obs.data[n].Lstd[j]=raw->obs.data[n].Pstd[j]=0.0;
+            raw->obs.data[n].D[j]=raw->obs.data[n].SNR[j]=0.0f;
+            raw->obs.data[n].Lstd[j]=raw->obs.data[n].Pstd[j]=0.0f;
             raw->obs.data[n].LLI[j]=0;
             raw->obs.data[n].code[j]=CODE_NONE;
         }
@@ -804,7 +805,7 @@ static int decode_trkd5(raw_t *raw)
         
         if (snr<=10.0) raw->lockt[sat-1][1]=1.0;
         
-#if 0 /* for debug */
+#ifdef RTK_DISABLED /* for debug */
         trace(2,"[%2d] qi=%d sys=%d prn=%3d frq=%2d flag=%02X ts=%1.3f "
               "snr=%4.1f dop=%9.3f adr=%13.3f %6.3f\n",U1(p+35),qi,U1(p+56),
               prn,frq,flag,ts,snr,dop,adr,
@@ -820,14 +821,14 @@ static int decode_trkd5(raw_t *raw)
         raw->obs.data[n].P[0]=tau*CLIGHT;
         raw->obs.data[n].L[0]=-adr;
         raw->obs.data[n].D[0]=(float)dop;
-        raw->obs.data[n].SNR[0]=snr;
+        raw->obs.data[n].SNR[0]=(float)snr;
         raw->obs.data[n].code[0]=sys==SYS_CMP?CODE_L2I:CODE_L1C;
         raw->obs.data[n].LLI[0]=raw->lockt[sat-1][1]>0.0?1:0;
         raw->lockt[sat-1][1]=0.0;
         
         for (j=1;j<NFREQ+NEXOBS;j++) {
             raw->obs.data[n].L[j]=raw->obs.data[n].P[j]=0.0;
-            raw->obs.data[n].D[j]=raw->obs.data[n].SNR[j]=0.0;
+            raw->obs.data[n].D[j]=raw->obs.data[n].SNR[j]=0.0f;
             raw->obs.data[n].LLI[j]=0;
             raw->obs.data[n].code[j]=CODE_NONE;
         }
@@ -1439,8 +1440,7 @@ extern int input_ubx(raw_t *raw, uint8_t data)
     
     /* synchronize frame */
     if (raw->nbyte==0) {
-        if (!sync_ubx(raw->buff,data)) return 0;
-        raw->nbyte=2;
+        if (sync_ubx(raw->buff,data)) raw->nbyte=2;
         return 0;
     }
     raw->buff[raw->nbyte++]=data;

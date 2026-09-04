@@ -48,7 +48,7 @@ static double geoidh_emb(const double *pos)
     return interpb(y,a,b);
 }
 /* get 2 byte signed integer from file ---------------------------------------*/
-static int16_t fget2b(FILE *fp, int32_t off)
+static int16_t fget2b(FILE *fp, long off)
 {
     uint8_t v[2]={0x00};
     if (fseek(fp,off,SEEK_SET)==EOF||fread(v,2,1,fp)<1) {
@@ -81,7 +81,7 @@ static float fget4f(FILE *fp, int off)
 {
     float v=0.0;
     if (fseek(fp,(long)off,SEEK_SET)==EOF||fread(&v,4,1,fp)<1) {
-        trace(2,"geoid data file range error: off=%ld\n",off);
+        trace(2,"geoid data file range error: off=%d\n",off);
     }
     return v; /* small-endian */
 }
@@ -118,7 +118,7 @@ static double geoidh_egm08(const double *pos, int model)
     /* http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/egm08_wgs84.html */
     /* (1) Und_min1x1_egm2008_isw=82_WGS84_TideFree_SE.gz */
     /* (2) Und_min2.5x2.5_egm2008_isw=82_WGS84_TideFree_SE.gz */
-#if 0
+#ifdef RTK_DISABLED
     /* not zero-inserted */
     y[0]=fget4f(fp_geoid,4L*(i1+j1*(nlon)));
     y[1]=fget4f(fp_geoid,4L*(i2+j1*(nlon)));
@@ -136,6 +136,7 @@ static double geoidh_egm08(const double *pos, int model)
 /* get gsi geoid data --------------------------------------------------------*/
 static double fgetgsi(FILE *fp, int nlon, int nlat, int i, int j)
 {
+    (void)nlat;
     const int nf=28,wf=9,nl=nf*wf+2,nr=(nlon-1)/nf+1;
     double v;
     int off=nl+j*nr*nl+i/nf*nl+i%nf*wf;

@@ -48,9 +48,9 @@
 # define MAX_GDOP   30          /* max gdop for valid solution  */
 
 /* pseudorange measurement error variance ------------------------------------*/
-static double varerr(const prcopt_t *opt, const ssat_t *ssat, const obsd_t *obs, double el, int sys)
+static double varerr(const prcopt_t *opt, const obsd_t *obs, double el, int sys)
 {
-    double fact=1.0,varr,snr_rover;
+    double fact=1.0,varr;
 
     switch (sys) {
         case SYS_GPS: fact *= EFACT_GPS; break;
@@ -62,11 +62,10 @@ static double varerr(const prcopt_t *opt, const ssat_t *ssat, const obsd_t *obs,
         default:      fact *= EFACT_GPS; break;
     }
     if (el<MIN_EL) el=MIN_EL;
-    /* var = R^2*(a^2 + (b^2/sin(el) + c^2*(10^(0.1*(snr_max-snr_rover)))) + (d*rcv_std)^2) */
+    /* var = R^2*(a^2 + (b^2/sin(el) + c^2*(10^(0.1*(snr_max-snr)))) + (d*rcv_std)^2) */
     varr=SQR(opt->err[1])+SQR(opt->err[2])/sin(el);
     if (opt->err[6]>0.0) {  /* if snr term not zero */
-        snr_rover=(ssat)?ssat->snr_rover[0]:opt->err[5];
-        varr+=SQR(opt->err[6])*pow(10,0.1*MAX(opt->err[5]-snr_rover,0));
+        varr+=SQR(opt->err[6])*pow(10,0.1*MAX(opt->err[5]-obs->SNR[0],0));
     }
     varr*=SQR(opt->eratio[0]);
     if (opt->err[7]>0.0) {
@@ -112,7 +111,7 @@ static double prange(const obsd_t *obs, const nav_t *nav, const prcopt_t *opt,
                      double *var)
 {
     double P1,P2,gamma,b1,b2;
-    int sat,sys,f2,bias_ix;
+    int sat,sys,f2;
 
     sat=obs->sat;
     sys=satsys(sat,NULL);
@@ -122,20 +121,13 @@ static double prange(const obsd_t *obs, const nav_t *nav, const prcopt_t *opt,
     *var=0.0;
     
     if (P1==0.0||(opt->ionoopt==IONOOPT_IFLC&&P2==0.0)) return 0.0;
-    bias_ix=code2bias_ix(sys,obs->code[0]);  /* L1 code bias */
-    if (bias_ix>0) { /* 0=ref code */
-        P1+=nav->cbias[sat-1][0][bias_ix-1];
+    P1-=code2bias(nav,sys,sat,obs->code[0],0);  /* L1 differential code bias */
+    if (sys!=SYS_GAL||f2!=1) { /* skip GAL P2 code bias for now to match previous version */
+        P2-=code2bias(nav,sys,sat,obs->code[f2],0); /* L2 or L5 differential code bias */
     }
-    /* GPS code biases are L1/L2, Galileo are L1/L5 */
-    if (sys==SYS_GAL&&f2==1) {
-        /* skip code bias, no GAL L2 bias available */
-    }
-    else {  /* apply L2 or L5 code bias */
-        bias_ix=code2bias_ix(sys,obs->code[f2]);
-        if (bias_ix>0) { /* 0=ref code */
-            P2+=nav->cbias[sat-1][1][bias_ix-1]; /* L2 or L5 code bias */
-        }
-    }
+    trace(5,"sys=%d sat=%d frq=%d, P: %.3f->%.3f, dt=%.3f\n",sys,obs->sat,0,obs->P[0],P1,(P1-obs->P[0])/(1E-9*CLIGHT));
+    trace(5,"sys=%d sat=%d frq=%d, P: %.3f->%.3f, dt=%.3f\n",sys,obs->sat,f2,obs->P[f2],P2,(P2-obs->P[f2])/(1E-9*CLIGHT));
+
     if (opt->ionoopt==IONOOPT_IFLC) { /* dual-frequency */
         
         if (sys==SYS_GPS||sys==SYS_QZS) { /* L1-L2 or L1-L5 */
@@ -259,6 +251,7 @@ extern int ionocorr(gtime_t time, const nav_t *nav, int sat, const double *pos,
 extern int tropcorr(gtime_t time, const nav_t *nav, const double *pos,
                     const double *azel, int tropopt, double *trp, double *var)
 {
+    (void)nav;
     char tstr[40];
     trace(4,"tropcorr: time=%s opt=%d pos=%.3f %.3f azel=%.3f %.3f\n",
           time2str(time,tstr,3),tropopt,pos[0]*R2D,pos[1]*R2D,azel[0]*R2D,
@@ -284,7 +277,7 @@ extern int tropcorr(gtime_t time, const nav_t *nav, const double *pos,
 static int rescode(int iter, const obsd_t *obs, int n, const double *rs,
                    const double *dts, const double *vare, const int *svh,
                    const nav_t *nav, const double *x, const prcopt_t *opt,
-                   const ssat_t *ssat, double *v, double *H, double *var,
+                   double *v, double *H, double *var,
                    double *azel, int *vsat, double *resp, int *ns)
 {
     gtime_t time;
@@ -361,10 +354,7 @@ static int rescode(int iter, const obsd_t *obs, int n, const double *rs,
         
         /* variance of pseudorange error */
         var[nv]=vare[i]+vmeas+vion+vtrp;
-        if (ssat)
-            var[nv++]+=varerr(opt,&ssat[i],&obs[i],azel[1+i*2],sys);
-        else
-            var[nv++]+=varerr(opt,NULL,&obs[i],azel[1+i*2],sys);
+        var[nv++]+=varerr(opt,&obs[i],azel[1+i*2],sys);
         trace(4,"sat=%2d azel=%5.1f %4.1f res=%7.3f sig=%5.3f\n",obs[i].sat,
               azel[i*2]*R2D,azel[1+i*2]*R2D,resp[i],sqrt(var[nv-1]));
     }
@@ -410,7 +400,7 @@ static int valsol(const double *azel, const int *vsat, int n,
 /* estimate receiver position ------------------------------------------------*/
 static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
                   const double *vare, const int *svh, const nav_t *nav,
-                  const prcopt_t *opt, const ssat_t *ssat, sol_t *sol, double *azel,
+                  const prcopt_t *opt, sol_t *sol, double *azel,
                   int *vsat, double *resp, char *msg)
 {
     double x[NX]={0},dx[NX],Q[NX*NX],*v,*H,*var,sig;
@@ -425,7 +415,7 @@ static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
     for (i=0;i<MAXITR;i++) {
 
         /* pseudorange residuals (m) */
-        nv=rescode(i,obs,n,rs,dts,vare,svh,nav,x,opt,ssat,v,H,var,azel,vsat,resp,
+        nv=rescode(i,obs,n,rs,dts,vare,svh,nav,x,opt,v,H,var,azel,vsat,resp,
                    &ns);
         
         if (nv<NX) {
@@ -508,7 +498,7 @@ static int raim_fde(const obsd_t *obs, int n, const double *rs,
             svh_e[k++]=svh[j];
         }
         /* estimate receiver position without a satellite */
-        if (!estpos(obs_e,n-1,rs_e,dts_e,vare_e,svh_e,nav,opt,ssat,&sol_e,azel_e,
+        if (!estpos(obs_e,n-1,rs_e,dts_e,vare_e,svh_e,nav,opt,&sol_e,azel_e,
                     vsat_e,resp_e,msg_e)) {
             trace(3,"raim_fde: exsat=%2d (%s)\n",obs[i].sat,msg);
             continue;
@@ -693,7 +683,7 @@ extern int pntpos(const obsd_t *obs, int n, const nav_t *nav,
     satposs(sol->time,obs,n,nav,opt_.sateph,rs,dts,var,svh);
     
     /* estimate receiver position and time with pseudorange */
-    stat=estpos(obs,n,rs,dts,var,svh,nav,&opt_,ssat,sol,azel_,vsat,resp,msg);
+    stat=estpos(obs,n,rs,dts,var,svh,nav,&opt_,sol,azel_,vsat,resp,msg);
     
     /* RAIM FDE */
     if (!stat&&n>=6&&opt->posopt[4]) {

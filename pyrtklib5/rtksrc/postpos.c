@@ -467,7 +467,7 @@ static void procpos(FILE *fp, FILE *fptm, const prcopt_t *popt, const solopt_t *
         if (!rtkpos(rtk, obs_ptr,n,&navs)) {
             if (rtk->sol.eventime.time != 0) {
                 if (mode == SOLMODE_SINGLE_DIR) {
-                    outinvalidtm(fptm, sopt, rtk->sol.eventime);
+                    if (fptm) outinvalidtm(fptm, sopt, rtk->sol.eventime);
                 } else if (!reverse&&nitm<MAXINVALIDTM) {
                     invalidtm[nitm++] = rtk->sol.eventime;
                 }
@@ -492,7 +492,7 @@ static void procpos(FILE *fp, FILE *fptm, const prcopt_t *popt, const solopt_t *
                 newsol = fillsoltm(oldsol,rtk->sol,rtk->sol.eventime);
                 num++;
                 if (!solstatic&&mode==SOLMODE_SINGLE_DIR) {
-                    outsol(fptm,&newsol,rb,sopt);
+                    if (fptm) outsol(fptm,&newsol,rb,sopt);
                 }
             }
             oldsol = rtk->sol;
@@ -773,7 +773,7 @@ static int readobsnav(gtime_t ts, gtime_t te, double ti, const char **infile,
         trace(1,"\n");
         return 0;
     }
-    if (nav->n<=0&&nav->ng<=0&&nav->ns<=0) {
+    if (nav->n<=0&&nav->ng<=0&&nav->ns<=0&&prcopt->sateph!=EPHOPT_PREC) {
         checkbrk("error : no nav data");
         trace(1,"\n");
         return 0;
@@ -896,6 +896,7 @@ static int antpos(prcopt_t *opt, int rcvno, const obs_t *obs, const nav_t *nav,
 static int openses(const prcopt_t *popt, const solopt_t *sopt,
                    const filopt_t *fopt, nav_t *nav, pcvs_t *pcvs, pcvs_t *pcvr)
 {
+    (void)popt; (void)nav;
     trace(3,"openses :\n");
 
     /* read satellite antenna parameters */
@@ -1076,7 +1077,7 @@ static int execses(gtime_t ts, gtime_t te, double ti, const prcopt_t *popt,
     if (*fopt->eop) {
         free(navs.erp.data); navs.erp.data=NULL; navs.erp.n=navs.erp.nmax=0;
         reppath(fopt->eop,path,ts,"","");
-        if (!readerp(path,&navs.erp)) {
+        if (readerp(path,&navs.erp) == 0) {
             showmsg("error : no erp data %s",path);
             trace(2,"no erp data %s\n",path);
         }
@@ -1091,10 +1092,8 @@ static int execses(gtime_t ts, gtime_t te, double ti, const prcopt_t *popt,
 
     /* read dcb parameters from DCB, BIA, BSX files */
     dcb_ok = 0;
-    for (i=0;i<MAX_CODE_BIASES;i++) for (k=0;k<MAX_CODE_BIAS_FREQS;k++) {
-        /* FIXME: cbias later initialized with 0 in readdcb()!  */
-        for (j=0;j<MAXSAT;j++) navs.cbias[j][k][i]=-1;
-        for (j=0;j<MAXRCV;j++) navs.rbias[j][k][i]=0;
+    for (i=0;i<MAX_CODE_BIASES;i++) for (k=0;k<NFREQ;k++) {
+        for (j=0;j<MAXSAT;j++) navs.cbias[j][k][i]=0;
         }
     for (i=0;i<n;i++) {  /* first check infiles for .BIA or .BSX files */
         if ((dcb_ok=readdcb(infile[i],&navs,stas))) break;
@@ -1449,7 +1448,7 @@ extern int postpos(gtime_t ts, gtime_t te, double ti, double tu,
                 while (k<nf) index[k++]=j;
 
                 if (nf>=MAXINFILE) {
-                    trace(2,"too many input files. trancated\n");
+                    trace(2,"too many input files. truncated\n");
                     break;
                 }
             }

@@ -143,7 +143,7 @@
 *                           use integer types in stdint.h
 *                           suppress warnings
 *-----------------------------------------------------------------------------*/
-#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200112L
 #include <stdarg.h>
 #include <ctype.h>
 #include <errno.h>
@@ -203,7 +203,7 @@ const double chisqr[100]={      /* chi-sqr(n) (alpha=0.001) */
 };
 const prcopt_t prcopt_default={ /* defaults processing options */
     PMODE_KINEMA,SOLTYPE_FORWARD, /* mode,soltype */
-    2,SYS_GPS|SYS_GLO|SYS_GAL,  /* nf, navsys */
+    2,SYS_GPS|SYS_GLO|SYS_GAL|SYS_CMP,  /* nf, navsys */
     15.0*D2R,{{0,0}},           /* elmin,snrmask */
     0,3,3,1,0,1,                /* sateph,modear,glomodear,gpsmodear,bdsmodear,arfilter */
     20,0,4,5,10,20,             /* maxout,minlock,minfixsats,minholdsats,mindropsats,minfix */
@@ -255,8 +255,8 @@ const char *formatstrs[32]={    /* stream format strings */
     NULL
 };
 
-static char *obscodes[MAXCODE + 1]={       /* observation code strings */
-
+// Observation code strings.
+static const char *obscodes[MAXCODE + 1]={
     ""  ,"1C","1P","1W","1Y", "1M","1N","1S","1L","1E", /*  0- 9 */
     "1A","1B","1X","1Z","2C", "2D","2S","2L","2X","2P", /* 10-19 */
     "2W","2Y","2M","2N","5I", "5Q","5X","7I","7Q","7X", /* 20-29 */
@@ -602,7 +602,7 @@ extern uint8_t obs2code(const char *obs)
 * return : obs code string ("1C","1P","1P",...)
 * notes  : obs codes are based on RINEX 3.04
 *-----------------------------------------------------------------------------*/
-extern char *code2obs(uint8_t code)
+extern const char *code2obs(uint8_t code)
 {
     if (code<=CODE_NONE||MAXCODE<code) return "";
     return obscodes[code];
@@ -610,7 +610,7 @@ extern char *code2obs(uint8_t code)
 /* GPS obs code to frequency -------------------------------------------------*/
 static int code2freq_GPS(uint8_t code, double *freq)
 {
-    char *obs=code2obs(code);
+    const char *obs=code2obs(code);
 
     switch (obs[0]) {
         case '1': *freq=FREQL1; return 0; /* L1 */
@@ -622,7 +622,7 @@ static int code2freq_GPS(uint8_t code, double *freq)
 /* GLONASS obs code to frequency ---------------------------------------------*/
 static int code2freq_GLO(uint8_t code, int fcn, double *freq)
 {
-    char *obs=code2obs(code);
+    const char *obs=code2obs(code);
 
     switch (obs[0]) {
         case '1':  /* G1 */
@@ -642,7 +642,7 @@ static int code2freq_GLO(uint8_t code, int fcn, double *freq)
 /* Galileo obs code to frequency ---------------------------------------------*/
 static int code2freq_GAL(uint8_t code, double *freq)
 {
-    char *obs=code2obs(code);
+    const char *obs=code2obs(code);
 
     switch (obs[0]) {
         case '1': *freq=FREQL1; return 0; /* E1 */
@@ -656,7 +656,7 @@ static int code2freq_GAL(uint8_t code, double *freq)
 /* QZSS obs code to frequency ------------------------------------------------*/
 static int code2freq_QZS(uint8_t code, double *freq)
 {
-    char *obs=code2obs(code);
+    const char *obs=code2obs(code);
 
     switch (obs[0]) {
         case '1': *freq=FREQL1; return 0; /* L1 */
@@ -669,7 +669,7 @@ static int code2freq_QZS(uint8_t code, double *freq)
 /* SBAS obs code to frequency ------------------------------------------------*/
 static int code2freq_SBS(uint8_t code, double *freq)
 {
-    char *obs=code2obs(code);
+    const char *obs=code2obs(code);
 
     switch (obs[0]) {
         case '1': *freq=FREQL1; return 0; /* L1 */
@@ -680,7 +680,7 @@ static int code2freq_SBS(uint8_t code, double *freq)
 /* BDS obs code to frequency -------------------------------------------------*/
 static int code2freq_BDS(uint8_t code, double *freq)
 {
-    char *obs=code2obs(code);
+    const char *obs=code2obs(code);
 
     switch (obs[0]) {
         case '2': *freq=FREQ1_CMP; return 0; /* B1I */
@@ -695,7 +695,7 @@ static int code2freq_BDS(uint8_t code, double *freq)
 /* NavIC obs code to frequency -----------------------------------------------*/
 static int code2freq_IRN(uint8_t code, double *freq)
 {
-    char *obs=code2obs(code);
+    const char *obs=code2obs(code);
 
     switch (obs[0]) {
         case '5': *freq=FREQL5; return 0; /* L5 */
@@ -733,73 +733,6 @@ extern int code2idx(int sys, uint8_t code)
         case SYS_IRN: return code2freq_IRN(code,&freq);
     }
     return -1;
-}
-/* satellite system to pcv_t per-system index ----------------------------------
-* args   : int    sys       I   satellite system (SYS_???)
-* return : index into pcv_t off_sys/var_sys/has_sys (-1: unsupported)
-*-----------------------------------------------------------------------------*/
-extern int sys2pcvidx(int sys)
-{
-    switch (sys) {
-        case SYS_GPS: return 0;
-        case SYS_GLO: return 1;
-        case SYS_GAL: return 2;
-        case SYS_QZS: return 3;
-        case SYS_SBS: return 4;
-        case SYS_CMP: return 5;
-        case SYS_IRN: return 6;
-    }
-    return -1;
-}
-/* ANTEX frequency band number to frequency index ------------------------------
-* args   : int    sys       I   satellite system (SYS_???)
-*          int    band      I   ANTEX band number (the digit in e.g. "E07")
-* return : frequency index (-1: this system has no such band)
-* notes  : derived from code2idx(), because every code2freq_XXX() switches only
-*          on the band digit of the obs code - so any obs code carrying that
-*          digit yields the system's index for that band. Keeping this derived
-*          rather than tabulated means code2freq_XXX() stays the single source
-*          of truth and the two cannot drift apart.
-*-----------------------------------------------------------------------------*/
-extern int antexband2idx(int sys, int band)
-{
-    uint8_t code;
-    char *obs;
-
-    if (band<1||band>9) return -1;
-
-    for (code=1;code<=MAXCODE;code++) {
-        obs=code2obs(code);
-        if (!*obs||obs[0]!=(char)('0'+band)) continue;
-        return code2idx(sys,code);
-    }
-    return -1;
-}
-/* rank of an ANTEX band when two bands share a frequency index -----------------
-* args   : int    sys       I   satellite system (SYS_???)
-*          int    band      I   ANTEX band number
-* return : rank (lower wins)
-* notes  : ANTEX blocks are not stored in band order (igs20.atx lists C02 after
-*          C01), so a first-wins or last-wins rule would pick a different signal
-*          depending on file layout. The preference mirrors codepris[] above, so
-*          the loaded PCO matches the signal RTKLIB's own code selection lands
-*          on: BDS index 0 is "IQXDPAN" (B1I attributes I/Q/X before B1C's D/P),
-*          GLONASS index 0 is "CPABX" (G1 before G1a) and index 1 is "PCABX"
-*          (G2 before G2a).
-*          Tabulated by hand, not derived from getcodepri(), which cannot express
-*          it: codepris[] is indexed by frequency index rather than by band, and
-*          obscodes[] spells BDS B1I both ways ("1I/1Q/1X" from RINEX 3.02 and
-*          "2I/2Q/2X" from 3.03), so bands 1 and 2 both reach 'I' at priority 14
-*          and tie - handing the slot to whichever block the file happens to list
-*          first, the very thing this ranking exists to prevent. Keep in step
-*          with codepris[] by hand if those priorities ever change; a runtime
-*          setcodepri() deliberately does not move the PCO choice.
-*-----------------------------------------------------------------------------*/
-static int antexband_rank(int sys, int band)
-{
-    if (sys==SYS_GLO) return (band==4||band==6)?1:0; /* G1a/G2a lose to G1/G2 */
-    if (sys==SYS_CMP) return (band==1)?1:0;          /* B1C loses to B1I */
-    return 0;
 }
 /* system and obs code to frequency --------------------------------------------
 * convert system and obs code to carrier frequency
@@ -880,8 +813,8 @@ extern void setcodepri(int sys, int idx, const char *pri)
 *-----------------------------------------------------------------------------*/
 extern int getcodepri(int sys, uint8_t code, const char *opt)
 {
-    const char *p,*optstr;
-    char *obs,str[8]="";
+    const char *p,*optstr, *obs;
+    char str[8]="";
     int i,j;
 
     switch (sys) {
@@ -1664,14 +1597,14 @@ extern double str2num(const char *s, int i, int n)
 *          gtime_t *t       O   gtime_t struct
 * return : status (0:ok,0>:error)
 *-----------------------------------------------------------------------------*/
-extern int str2time(const char *s, int i, int n, gtime_t *t)
+extern int str2time(const char *s, size_t i, size_t n, gtime_t *t)
 {
-    double ep[6];
-    char str[256],*p=str;
+    char str[256];
 
-    if (i<0||(int)strlen(s)<i||(int)sizeof(str)-1<i) return -1;
-    for (s+=i;*s&&--n>=0;) *p++=*s++;
-    *p='\0';
+    if (i >= strlen(s) || n >= sizeof(str)) return -1;
+    for (size_t j = 0; j < n; j++) str[j] = s[i + j];
+    str[n] = '\0';
+    double ep[6];
     if (sscanf(str,"%lf %lf %lf %lf %lf %lf",ep,ep+1,ep+2,ep+3,ep+4,ep+5)<6)
         return -1;
     if (ep[0]<100.0) ep[0]+=ep[0]<80.0?2000.0:1900.0;
@@ -2108,7 +2041,8 @@ extern int adjgpsweek(int week)
 extern uint32_t tickget(void)
 {
 #ifdef WIN32
-    return (uint32_t)timeGetTime();
+    // To avoid needing all windows.h and lib WinMM for timeGetTime().
+    return (uint32_t)GetTickCount64();
 #else
     struct timespec tp={0};
     struct timeval  tv={0};
@@ -2600,22 +2534,6 @@ static int readngspcv(const char *file, pcvs_t *pcvs)
 
     return 1;
 }
-/* ANTEX system letter to satellite system -----------------------------------*/
-static int antexsys(char c)
-{
-    switch (c) {
-        case 'G': return SYS_GPS;
-        case 'R': return SYS_GLO;
-        case 'E': return SYS_GAL;
-        case 'J': return SYS_QZS;
-        case 'S': return SYS_SBS;
-        case 'C': return SYS_CMP;
-        case 'I': return SYS_IRN;
-    }
-    return SYS_NONE;
-}
-#define ANTEX_RANK_NONE 9 /* worse than any antexband_rank() result */
-
 /* read antex file ----------------------------------------------------------*/
 static int readantex(const char *file, pcvs_t *pcvs)
 {
@@ -2623,10 +2541,7 @@ static int readantex(const char *file, pcvs_t *pcvs)
     static const pcv_t pcv0={0};
     pcv_t pcv;
     double neu[3];
-    int i,j,band,sys,rank,state=0,sysi=-1,idx=-1,legacy=0;
-    int best[NSYSPCV][NFREQ]={{0}}; /* real reset is at START OF ANTENNA below;
-                                       initialised here only to satisfy compilers
-                                       that cannot see that through strstr() */
+    int i,f,freq=0,state=0,freqs[]={1,2,5,0};
     char buff[256];
 
     trace(3,"readantex: file=%s\n",file);
@@ -2642,8 +2557,6 @@ static int readantex(const char *file, pcvs_t *pcvs)
         if (strstr(buff+60,"START OF ANTENNA")) {
             pcv=pcv0;
             state=1;
-            sysi=idx=-1; legacy=0;
-            for (i=0;i<NSYSPCV;i++) for (j=0;j<NFREQ;j++) best[i][j]=ANTEX_RANK_NONE;
         }
         if (strstr(buff+60,"END OF ANTENNA")) {
             addpcv(&pcv,pcvs);
@@ -2665,58 +2578,27 @@ static int readantex(const char *file, pcvs_t *pcvs)
             if (!str2time(buff,0,43,&pcv.te)) continue;
         }
         else if (strstr(buff+60,"START OF FREQUENCY")) {
-            sysi=idx=-1; legacy=0;
-            if (!(sys=antexsys(buff[3]))) continue;
-            /* a satellite block only describes its own system */
-            if (pcv.sat&&sys!=satsys(pcv.sat,NULL)) continue;
-            if (sscanf(buff+4,"%d",&band)<1) continue;
-            /* the band -> slot mapping is derived from code2idx(); it subsumes
-               upstream's "Galileo E07 -> slot 1" special case (E1=0,E5b=1,E5a=2)
-               and, unlike upstream's {1,2,5} table, also places BDS B1I/B2I in the
-               slots satantoff() reads for BeiDou (see antexband_rank) */
-            if ((idx=antexband2idx(sys,band))<0||idx>=NFREQ) { idx=-1; continue; }
-            if ((sysi=sys2pcvidx(sys))<0) { sysi=idx=-1; continue; }
-
-            /* two ANTEX bands can share one index (BDS B1I/B1C, GLO G1/G1a);
-               blocks are not in band order, so pick by rank, not by position */
-            rank=antexband_rank(sys,band);
-            if (rank>=best[sysi][idx]) { sysi=idx=-1; continue; }
-            best[sysi][idx]=rank;
-
-            /* this band takes the slot over: drop whatever a worse-ranked band
-               left there, so off_sys and var_sys can never end up describing two
-               different signals (a block carrying NORTH/EAST/UP but no NOAZI
-               would otherwise keep the loser's PCV against the winner's PCO) */
-            for (i=0;i< 3;i++) pcv.off_sys[PCVI(sysi,idx)][i]=0.0;
-            for (i=0;i<19;i++) pcv.var_sys[PCVI(sysi,idx)][i]=0.0;
-            pcv.has_sys[sysi]&=~(1<<idx);
-
-            /* legacy off/var hold GPS for a receiver antenna and the satellite's
-               own system for a satellite antenna - which is what antmodel(),
-               antmodel_s() and satantoff() read. Receiver blocks of other systems
-               never touch them, so pcv.off is unchanged for every receiver. */
-            legacy=(pcv.sat||sys==SYS_GPS);
+            if (!pcv.sat&&buff[3]!='G') continue; /* only read rec ant for GPS */
+            if (sscanf(buff+4,"%d",&f)<1) continue;
+            for (i=0;freqs[i];i++) if (freqs[i]==f) break;
+            if (freqs[i]) freq=i+1;
+            /* for Galileo E5b: save to E2, not E7  */
+            if (satsys(pcv.sat,NULL)==SYS_GAL&&f==7) freq=2;
         }
         else if (strstr(buff+60,"END OF FREQUENCY")) {
-            sysi=idx=-1; legacy=0;
+            freq=0;
         }
         else if (strstr(buff+60,"NORTH / EAST / UP")) {
-            if (sysi<0||idx<0) continue;
+            if (freq<1||NFREQ<freq) continue;
             if (decodef(buff,3,neu)<3) continue;
-            pcv.off_sys[PCVI(sysi,idx)][0]=neu[pcv.sat?0:1]; /* x or e */
-            pcv.off_sys[PCVI(sysi,idx)][1]=neu[pcv.sat?1:0]; /* y or n */
-            pcv.off_sys[PCVI(sysi,idx)][2]=neu[2];           /* z or u */
-            pcv.has_sys[sysi]|=1<<idx;
-            if (legacy) matcpy(pcv.off[idx],pcv.off_sys[PCVI(sysi,idx)],3,1);
+            pcv.off[freq-1][0]=neu[pcv.sat?0:1]; /* x or e */
+            pcv.off[freq-1][1]=neu[pcv.sat?1:0]; /* y or n */
+            pcv.off[freq-1][2]=neu[2];           /* z or u */
         }
         else if (strstr(buff,"NOAZI")) {
-            if (sysi<0||idx<0) continue;
-            if ((i=decodef(buff+8,19,pcv.var_sys[PCVI(sysi,idx)]))<=0) continue;
-            for (;i<19;i++) {
-                pcv.var_sys[PCVI(sysi,idx)][i]=pcv.var_sys[PCVI(sysi,idx)][i-1];
-            }
-            pcv.has_sys[sysi]|=1<<idx;
-            if (legacy) matcpy(pcv.var[idx],pcv.var_sys[PCVI(sysi,idx)],19,1);
+            if (freq<1||NFREQ<freq) continue;
+            if ((i=decodef(buff+8,19,pcv.var[freq-1]))<=0) continue;
+            for (;i<19;i++) pcv.var[freq-1][i]=pcv.var[freq-1][i-1];
         }
     }
     fclose(fp);
@@ -2737,7 +2619,7 @@ extern int readpcv(const char *file, pcvs_t *pcvs)
 {
     pcv_t *pcv;
     char *ext;
-    int i,j,k,stat;
+    int i,stat;
 
     trace(3,"readpcv: file=%s\n",file);
 
@@ -2754,21 +2636,6 @@ extern int readpcv(const char *file, pcvs_t *pcvs)
         trace(4,"sat=%2d type=%20s code=%s off=%8.4f %8.4f %8.4f  %8.4f %8.4f %8.4f\n",
               pcv->sat,pcv->type,pcv->code,pcv->off[0][0],pcv->off[0][1],
               pcv->off[0][2],pcv->off[1][0],pcv->off[1][1],pcv->off[1][2]);
-        /* resolve the per-system arrays: any (system,slot) without its own ANTEX
-           data falls back to the legacy value - i.e. exactly what that system
-           received before per-system PCVs existed (GPS for a receiver antenna).
-           The fallback is per (system,slot), not per system: an antenna can
-           define E01 but not E07, and a per-system flag would leave its slot 1
-           at zero, removing a correction that is applied today. Note that this
-           fork (unlike RTKLIB 2.4.3) does not copy slot 1 into slots >= 2, so a
-           slot with no ANTEX data for any system stays zero, as upstream does.
-           readngspcv() never sets has_sys, so NGS files resolve entirely to the
-           legacy arrays and behave as before. */
-        for (k=0;k<NSYSPCV;k++) for (j=0;j<NFREQ;j++) {
-            if (pcv->has_sys[k]&(1<<j)) continue;
-            matcpy(pcv->off_sys[PCVI(k,j)],pcv->off[j], 3,1);
-            matcpy(pcv->var_sys[PCVI(k,j)],pcv->var[j],19,1);
-        }
     }
     return stat;
 }
@@ -2832,33 +2699,45 @@ extern pcv_t *searchpcv(int sat, const char *type, gtime_t time,
 *-----------------------------------------------------------------------------*/
 extern void readpos(const char *file, const char *rcv, double *pos)
 {
-    static double poss[2048][3];
-    static char stas[2048][16];
-    FILE *fp;
-    int i,j,len,np=0;
-    char buff[256],str[256];
+  trace(3, "readpos: file=%s\n", file);
 
-    trace(3,"readpos: file=%s\n",file);
+  FILE *fp = fopen(file, "r");
+  if (fp == NULL) {
+    fprintf(stderr, "reference position file open error : %s\n", file);
+    return;
+  }
 
-    if (!(fp=fopen(file,"r"))) {
-        fprintf(stderr,"reference position file open error : %s\n",file);
-        return;
-    }
-    while (np<2048&&fgets(buff,sizeof(buff),fp)) {
-        if (buff[0]=='%'||buff[0]=='#') continue;
-        if (sscanf(buff,"%lf %lf %lf %255s",&poss[np][0],&poss[np][1],&poss[np][2],
-                   str)<4) continue;
-        sprintf(stas[np++],"%.15s",str);
-    }
+  size_t maxp = 2048;
+  double (*poss)[3] = malloc(maxp * sizeof(*poss));
+  char (*stas)[16] = malloc(maxp * sizeof(*stas));
+  if (poss == NULL || stas == NULL) {
+    trace(1, "readpos malloc error\n");
     fclose(fp);
-    len=(int)strlen(rcv);
-    for (i=0;i<np;i++) {
-        if (strncmp(stas[i],rcv,len)) continue;
-        for (j=0;j<3;j++) pos[j]=poss[i][j];
-        pos[0]*=D2R; pos[1]*=D2R;
-        return;
-    }
-    pos[0]=pos[1]=pos[2]=0.0;
+    goto done;
+  }
+
+  unsigned np = 0;
+  char buff[256];
+  while (np < maxp && fgets(buff, sizeof(buff), fp)) {
+    if (buff[0] == '%' || buff[0] == '#') continue;
+    char str[256];
+    if (sscanf(buff, "%lf %lf %lf %255s", &poss[np][0], &poss[np][1], &poss[np][2], str) < 4)
+      continue;
+    snprintf(stas[np++], sizeof(stas[0]), "%.15s", str);
+  }
+  fclose(fp);
+  size_t len = strlen(rcv);
+  for (unsigned i = 0; i < np; i++) {
+    if (strncmp(stas[i], rcv, len)) continue;
+    for (unsigned j = 0; j < 3; j++) pos[j] = poss[i][j];
+    pos[0] *= D2R;
+    pos[1] *= D2R;
+    goto done;
+  }
+  pos[0] = pos[1] = pos[2] = 0.0;
+done:
+  free(poss);
+  free(stas);
 }
 /* read blq record -----------------------------------------------------------*/
 static int readblqrecord(FILE *fp, double odisp[2][11][3])
@@ -2921,96 +2800,121 @@ extern int readblq(const char *file, const char *sta, double odisp[2][11][3])
 * read earth rotation parameters
 * args   : char   *file       I   IGS ERP file (IGS ERP ver.2)
 *          erp_t  *erp        O   earth rotation parameters
-* return : status (1:ok,0:file open error)
+* return : number of files read.
 *-----------------------------------------------------------------------------*/
 extern int readerp(const char *file, erp_t *erp) {
   trace(3, "readerp: file=%s\n", file);
 
-  FILE *fp = fopen(file, "r");
-  if (!fp) {
-    trace(2, "erp file open error: file=%s\n", file);
-    return 0;
+  char *efiles[MAXEXFILE];
+
+  for (int i = 0; i < MAXEXFILE; i++) {
+    efiles[i] = (char *)malloc(1024);
+    if (!efiles[i]) {
+      for (i--; i >= 0; i--) free(efiles[i]);
+      return 0;
+    }
   }
-  char buff[256];
-  int state = 0;
-  int utcp = 0, taip = 0;
-  while (fgets(buff, sizeof(buff), fp)) {
-    // Detect the IGS format, and support concatenated files.
-    if (strstr(buff, "version 2") || strstr(buff, "VERSION 2")) {
-      state = 1;
-      continue;
+  // Expand wild card in file path.
+  int n = expath(file, efiles, MAXEXFILE), nr = 0;
+
+  for (int i = 0; i < n; i++) {
+    char *ext = strrchr(efiles[i], '.');
+    if (!ext) continue;
+
+    if (!strstr(ext,".erp") && !strstr(ext,".ERP")) continue;
+
+    FILE *fp = fopen(efiles[i], "r");
+    if (!fp) {
+      trace(2, "erp file open error: file=%s\n", efiles[i]);
+      for (int j = 0; j < MAXEXFILE; j++) free(efiles[j]);
+      return 0;
     }
-    if (state == 0) {
-      // Ignore content without firstly seeing the IGS format version.
-      continue;
-    }
-    if (state == 1) {
-      // IGS format content header search. Data is not read without firstly
-      // reading the content header line. A version line is detected above,
-      // and other lines are ignored. Allow some variation in case.
-      if (strstr(buff, "MJD") || strstr(buff, "mjd") || strstr(buff, "Xpole") ||
-          strstr(buff, "xpole") || strstr(buff, "Ypole") || strstr(buff, "ypole") ||
-          strstr(buff, "UT1") || strstr(buff, "ut1") || strstr(buff, "UTC") ||
-          strstr(buff, "utc") || strstr(buff, "TAI") || strstr(buff, "tai") ||
-          strstr(buff, "LOD") || strstr(buff, "lod")) {
-        // Note UTC vs TAI.
-        utcp = !!(strstr(buff, "UTC") || strstr(buff, "utc"));
-        taip = !!(strstr(buff, "TAI") || strstr(buff, "tai"));
-        state = 2;
-      }
-      continue;
-    }
-    if (state == 2) {
-      // IGS format data search. Detect data lines as containing only
-      // numeric data. A version line is detected above, and other lines are
-      // ignored.
-      int data = 0;
-      for (size_t i = 0; i < strlen(buff); i++) {
-        char ch = buff[i];
-        if (ch == '\0' || ch == '\r' || ch == '\n') break;
-        if (ch == '.' || ch == '-' || ch == '+' || ch == ' ' || ch == '\t') continue;
-        if (ch < '0' || ch > '9') {
-          data = 0;
-          break;
-        }
-        data = 1;
-      }
-      if (!data) continue;
-      double v[14] = {0};
-      if (sscanf(buff, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", v, v + 1, v + 2,
-                 v + 3, v + 4, v + 5, v + 6, v + 7, v + 8, v + 9, v + 10, v + 11, v + 12,
-                 v + 13) < 5) {
+    char buff[256];
+    int state = 0;
+    int utcp = 0, taip = 0, nerp = 0;
+    while (fgets(buff, sizeof(buff), fp)) {
+      // Detect the IGS format, and support concatenated files.
+      if (strstr(buff, "version 2") || strstr(buff, "VERSION 2")) {
+        state = 1;
         continue;
       }
-      if (erp->n >= erp->nmax) {
-        erp->nmax = erp->nmax <= 0 ? 128 : erp->nmax * 2;
-        erpd_t *erp_data = (erpd_t *)realloc(erp->data, sizeof(erpd_t) * erp->nmax);
-        if (erp_data == NULL) {
-          free(erp->data);
-          erp->data = NULL;
-          erp->n = erp->nmax = 0;
-          fclose(fp);
-          return 0;
+      if (state == 0) {
+        // Ignore content without firstly seeing the IGS format version.
+        continue;
+      }
+      if (state == 1) {
+        // IGS format content header search. Data is not read without firstly
+        // reading the content header line. A version line is detected above,
+        // and other lines are ignored. Allow some variation in case.
+        if (strstr(buff, "MJD") || strstr(buff, "mjd") || strstr(buff, "Xpole") ||
+            strstr(buff, "xpole") || strstr(buff, "Ypole") || strstr(buff, "ypole") ||
+            strstr(buff, "UT1") || strstr(buff, "ut1") || strstr(buff, "UTC") ||
+            strstr(buff, "utc") || strstr(buff, "TAI") || strstr(buff, "tai") ||
+            strstr(buff, "LOD") || strstr(buff, "lod")) {
+          // Note UTC vs TAI.
+          utcp = !!(strstr(buff, "UTC") || strstr(buff, "utc"));
+          taip = !!(strstr(buff, "TAI") || strstr(buff, "tai"));
+          state = 2;
         }
-        erp->data = erp_data;
+        continue;
       }
-      erp->data[erp->n].mjd = v[0];
-      erp->data[erp->n].xp = v[1] * 1E-6 * AS2R;
-      erp->data[erp->n].yp = v[2] * 1E-6 * AS2R;
-      erp->data[erp->n].ut1_utc = v[3] * 1E-7;
-      if (taip) {
-        // Convert UT1-TAI to UT1-UTC.
-        const double ep[] = {2000, 1, 1, 12, 0, 0};
-        gtime_t tutc = timeadd(epoch2time(ep), (v[0] - 51544.5) * 86400.0);
-        erp->data[erp->n].ut1_utc += timediff(utc2gpst(tutc), tutc) + 19;
+      if (state == 2) {
+        // IGS format data search. Detect data lines as containing only
+        // numeric data. A version line is detected above, and other lines are
+        // ignored.
+        int data = 0;
+        for (size_t i = 0; i < strlen(buff); i++) {
+          char ch = buff[i];
+          if (ch == '\0' || ch == '\r' || ch == '\n') break;
+          if (ch == '.' || ch == '-' || ch == '+' || ch == ' ' || ch == '\t') continue;
+          if (ch < '0' || ch > '9') {
+            data = 0;
+            break;
+          }
+          data = 1;
+        }
+        if (!data) continue;
+        double v[14] = {0};
+        if (sscanf(buff, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", v, v + 1, v + 2,
+                   v + 3, v + 4, v + 5, v + 6, v + 7, v + 8, v + 9, v + 10, v + 11, v + 12,
+                   v + 13) < 5) {
+          continue;
+        }
+        if (erp->n >= erp->nmax) {
+          erp->nmax = erp->nmax <= 0 ? 128 : erp->nmax * 2;
+          erpd_t *erp_data = (erpd_t *)realloc(erp->data, sizeof(erpd_t) * erp->nmax);
+          if (erp_data == NULL) {
+            free(erp->data);
+            erp->data = NULL;
+            erp->n = erp->nmax = 0;
+            fclose(fp);
+            for (int j = 0; j < MAXEXFILE; j++) free(efiles[j]);
+            return 0;
+          }
+          erp->data = erp_data;
+        }
+        erp->data[erp->n].mjd = v[0];
+        erp->data[erp->n].xp = v[1] * 1E-6 * AS2R;
+        erp->data[erp->n].yp = v[2] * 1E-6 * AS2R;
+        erp->data[erp->n].ut1_utc = v[3] * 1E-7;
+        (void)utcp;
+        if (taip) {
+          // Convert UT1-TAI to UT1-UTC.
+          const double ep[] = {2000, 1, 1, 12, 0, 0};
+          gtime_t tutc = timeadd(epoch2time(ep), (v[0] - 51544.5) * 86400.0);
+          erp->data[erp->n].ut1_utc += timediff(utc2gpst(tutc), tutc) + 19;
+        }
+        erp->data[erp->n].lod = v[4] * 1E-7;
+        erp->data[erp->n].xpr = v[12] * 1E-6 * AS2R;
+        erp->data[erp->n++].ypr = v[13] * 1E-6 * AS2R;
+        nerp++;
       }
-      erp->data[erp->n].lod = v[4] * 1E-7;
-      erp->data[erp->n].xpr = v[12] * 1E-6 * AS2R;
-      erp->data[erp->n++].ypr = v[13] * 1E-6 * AS2R;
     }
+    if (nerp > 0) nr++;
+    fclose(fp);
   }
-  fclose(fp);
-  return 1;
+  for (int j = 0; j < MAXEXFILE; j++) free(efiles[j]);
+  return nr;
 }
 /* get earth rotation parameter values -----------------------------------------
 * get earth rotation parameter values
@@ -3269,7 +3173,7 @@ extern int readnav(const char *file, nav_t *nav)
     eph_t eph0={0};
     geph_t geph0={0};
     char buff[4096],*p;
-    long toe_time,tof_time,toc_time,ttr_time;
+    long unsigned toe_time,tof_time,toc_time,ttr_time;
     int i,sat,prn;
 
     trace(3,"loadnav: file=%s\n",file);
@@ -3293,7 +3197,7 @@ extern int readnav(const char *file, nav_t *nav)
             nav->geph[prn-1]=geph0;
             nav->geph[prn-1].sat=sat;
             toe_time=tof_time=0;
-            (void)sscanf(p+1,"%d,%d,%d,%d,%d,%d,%ld,%ld,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,"
+            (void)sscanf(p+1,"%d,%d,%d,%d,%d,%d,%lu,%lu,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,"
                         "%lf,%lf,%lf,%lf",
                    &nav->geph[prn-1].iode,&nav->geph[prn-1].frq,&nav->geph[prn-1].svh,
                    &nav->geph[prn-1].flags,&nav->geph[prn-1].sva,&nav->geph[prn-1].age,
@@ -3309,7 +3213,7 @@ extern int readnav(const char *file, nav_t *nav)
             nav->eph[sat-1]=eph0;
             nav->eph[sat-1].sat=sat;
             toe_time=toc_time=ttr_time=0;
-            (void)sscanf(p+1,"%d,%d,%d,%d,%ld,%ld,%ld,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,"
+            (void)sscanf(p+1,"%d,%d,%d,%d,%lu,%lu,%lu,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,"
                         "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%d,%d",
                    &nav->eph[sat-1].iode,&nav->eph[sat-1].iodc,&nav->eph[sat-1].sva ,
                    &nav->eph[sat-1].svh ,
@@ -3343,12 +3247,12 @@ extern int savenav(const char *file, const nav_t *nav)
     for (i=0;i<MAXSAT;i++) {
         if (nav->eph[i].ttr.time==0) continue;
         satno2id(nav->eph[i].sat,id);
-        fprintf(fp,"%s,%d,%d,%d,%d,%d,%d,%d,%.14E,%.14E,%.14E,%.14E,%.14E,%.14E,"
+        fprintf(fp,"%s,%d,%d,%d,%d,%lu,%lu,%lu,%.14E,%.14E,%.14E,%.14E,%.14E,%.14E,"
                    "%.14E,%.14E,%.14E,%.14E,%.14E,%.14E,%.14E,%.14E,%.14E,%.14E,"
                    "%.14E,%.14E,%.14E,%.14E,%.14E,%d,%d\n",
                 id,nav->eph[i].iode,nav->eph[i].iodc,nav->eph[i].sva ,
-                nav->eph[i].svh ,(int)nav->eph[i].toe.time,
-                (int)nav->eph[i].toc.time,(int)nav->eph[i].ttr.time,
+                nav->eph[i].svh ,(long unsigned)nav->eph[i].toe.time,
+                (long unsigned)nav->eph[i].toc.time,(long unsigned)nav->eph[i].ttr.time,
                 nav->eph[i].A   ,nav->eph[i].e  ,nav->eph[i].i0  ,nav->eph[i].OMG0,
                 nav->eph[i].omg ,nav->eph[i].M0 ,nav->eph[i].deln,nav->eph[i].OMGd,
                 nav->eph[i].idot,nav->eph[i].crc,nav->eph[i].crs ,nav->eph[i].cuc ,
@@ -3359,12 +3263,12 @@ extern int savenav(const char *file, const nav_t *nav)
     for (i=0;i<MAXPRNGLO;i++) {
         if (nav->geph[i].tof.time==0) continue;
         satno2id(nav->geph[i].sat,id);
-        fprintf(fp,"%s,%d,%d,%d,%d,%d,%d,%d,%d,%.14E,%.14E,%.14E,%.14E,%.14E,%.14E,"
+        fprintf(fp,"%s,%d,%d,%d,%d,%d,%d,%lu,%lu,%.14E,%.14E,%.14E,%.14E,%.14E,%.14E,"
                    "%.14E,%.14E,%.14E,%.14E,%.14E,%.14E\n",
                 id,nav->geph[i].iode,nav->geph[i].frq,nav->geph[i].svh,
                 nav->geph[i].flags,
-                nav->geph[i].sva,nav->geph[i].age,(int)nav->geph[i].toe.time,
-                (int)nav->geph[i].tof.time,
+                nav->geph[i].sva,nav->geph[i].age,(long unsigned)nav->geph[i].toe.time,
+                (long unsigned)nav->geph[i].tof.time,
                 nav->geph[i].pos[0],nav->geph[i].pos[1],nav->geph[i].pos[2],
                 nav->geph[i].vel[0],nav->geph[i].vel[1],nav->geph[i].vel[2],
                 nav->geph[i].acc[0],nav->geph[i].acc[1],nav->geph[i].acc[2],
@@ -3442,7 +3346,7 @@ extern int execcmd(const char *cmd)
 }
 /* expand file path ------------------------------------------------------------
 * expand file path with wild-card (*) in file
-* args   : char   *path     I   file path to expand (captal insensitive)
+* args   : char   *path     I   file path to expand (capital insensitive)
 *          char   *paths    O   expanded file paths
 *          int    nmax      I   max number of expanded file paths
 * return : number of expanded file paths
@@ -3873,8 +3777,8 @@ extern double ionppp(const double *pos, const double *azel, double re,
 /* select iono-free linear combination (L1/L2 or L1/L5) ----------------------*/
 extern int seliflc(int optnf,int sys)
 {
-    /* use L1/L5 for Galileo if L5 is enabled */
-    return((optnf==2||sys!=SYS_GAL)?1:2);
+    /* use L1/L5 for GPS,GAL,BDS if L5 is enabled */
+    return((optnf==2||sys==SYS_GLO)?1:2);
 }
 /* troposphere model -----------------------------------------------------------
 * compute tropospheric delay by standard atmosphere and saastamoinen model
@@ -3887,6 +3791,7 @@ extern int seliflc(int optnf,int sys)
 extern double tropmodel(gtime_t time, const double *pos, const double *azel,
                         double humi)
 {
+    (void)time;
     const double temp0=15.0; /* temperature at sea level */
     double hgt,pres,temp,e,z,trph,trpw;
 
@@ -4043,46 +3948,6 @@ extern void antmodel(const pcv_t *pcv, const double *del, const double *azel,
     }
     trace(4,"antmodel: dant=%6.3f %6.3f\n",dant[0],dant[1]);
 }
-/* receiver antenna model for a satellite system --------------------------------
-* compute antenna offset using the calibration of the observed constellation
-* args   : pcv_t *pcv       I   antenna phase center parameters
-*          int     sys      I   satellite system (SYS_???)
-*          double *del      I   antenna delta {e,n,u} (m)
-*          double *azel     I   azimuth/elevation for receiver {az,el} (rad)
-*          int     opt      I   option (0:only offset,1:offset+pcv)
-*          double *dant     O   range offsets for each frequency (m)
-* return : none
-* notes  : falls back to antmodel() when the antenna carries no per-system data
-*          for sys - which covers a hand-built pcv_t (e.g. a zero-initialised
-*          one from Python), an NGS pcv file, and an unknown system. Note that
-*          readpcv() already resolves missing (system,slot) pairs to the legacy
-*          arrays, so for an ANTEX-loaded antenna this is equivalent either way.
-*-----------------------------------------------------------------------------*/
-extern void antmodel_sys(const pcv_t *pcv, int sys, const double *del,
-                         const double *azel, int opt, double *dant)
-{
-    double e[3],off[3],cosel=cos(azel[1]);
-    int i,j,s=sys2pcvidx(sys);
-
-    if (s<0||!pcv->has_sys[s]) {
-        antmodel(pcv,del,azel,opt,dant);
-        return;
-    }
-    trace(4,"antmodel_sys: sys=%d azel=%6.1f %4.1f opt=%d\n",sys,azel[0]*R2D,
-          azel[1]*R2D,opt);
-
-    e[0]=sin(azel[0])*cosel;
-    e[1]=cos(azel[0])*cosel;
-    e[2]=sin(azel[1]);
-
-    for (i=0;i<NFREQ;i++) {
-        for (j=0;j<3;j++) off[j]=pcv->off_sys[PCVI(s,i)][j]+del[j];
-
-        dant[i]=-dot3(off,e)+
-                (opt?interpvar(90.0-azel[1]*R2D,pcv->var_sys[PCVI(s,i)]):0.0);
-    }
-    trace(4,"antmodel_sys: dant=%6.3f %6.3f\n",dant[0],dant[1]);
-}
 /* satellite antenna model ------------------------------------------------------
 * compute satellite antenna phase center parameters
 * args   : pcv_t *pcv       I   antenna phase center parameters
@@ -4116,6 +3981,7 @@ static void sunpos_eci(gtime_t tutc, const double *erpv, double *rsun) {
   trace(4, "sunpos_eci: tutc=%s\n", time2str(tutc, tstr, 3));
 
 #ifdef SUNPOS_SOFA  /* use high accuracy functions in sofa.c */
+  (void)erpv;
   static THREADLOCAL gtime_t tutc_ = {0, 0};
   static THREADLOCAL double rsun_[3];
 
@@ -4167,6 +4033,7 @@ static void moonpos_eci(gtime_t tutc, const double *erpv, double *rmoon) {
   trace(4, "moonpos_eci: tutc=%s\n", time2str(tutc, tstr, 3));
 
 #ifdef MOONPOS_SOFA   /* use high accuracy functions in sofa.c */
+  (void)erpv;
   static THREADLOCAL gtime_t tutc_ = {0, 0};
   static THREADLOCAL double rmoon_[3];
 
