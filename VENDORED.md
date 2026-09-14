@@ -43,6 +43,15 @@ Recorded commit by commit on this branch; each `[rtksrc]` commit touches the
 smallest possible set of upstream lines so the series re-applies with `git am -3`
 on the next bump. See `docs/migration_demo5_journal.md` in vrsgen for the gates.
 
+- `rtklib.h`: `MAXPRNCMP 63` (upstream demo5: 50). Upstream's cap makes `satno()`
+  reject BDS-3 C51-C63 (the GEO satellites C59-C62 among them), so the RINEX and
+  RTCM readers silently drop them and `satid2no()` returns 0 for them, while the
+  RTKLIB 2.4.3 b34 build vrsgen compares against accepts up to 63. `eph2pos()`
+  already handles C59-C63 as GEO upstream; nothing else in `src/` depends on the
+  value. `MAXSAT` becomes 221 (same as 2.4.3): a full rebuild is mandatory, and
+  `gen_rtk.py` must be re-run (`merge_handmerge.py`) so `pyrtklib5.MAXPRNCMP`
+  reports 63 - the generator writes the header value as a literal.
+
 ## Milestone 2 (branch `vrsgen-port-main`)
 
 `rtksrc/` is `src/` of `06e86442` **byte for byte** except: the three build files

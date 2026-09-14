@@ -1147,7 +1147,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
     m.attr("NSATQZS")=(MAXPRNQZS-MINPRNQZS+1);
     m.attr("NSYSQZS")=1;
     m.attr("MINPRNCMP")=1;
-    m.attr("MAXPRNCMP")=50;
+    m.attr("MAXPRNCMP")=63;
     m.attr("NSATCMP")=(MAXPRNCMP-MINPRNCMP+1);
     m.attr("NSYSCMP")=1;
     m.attr("MINPRNIRN")=1;
