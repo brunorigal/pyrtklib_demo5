@@ -2892,11 +2892,15 @@ PYBIND11_MODULE(pyrtklib5, m) {
 
     /* extract diagonal of a square matrix stored as flat Arr1D */
     m.def("matrix_diagonal", [](Arr1D<double> &mat, int n) {
-        auto result = py::array_t<double>(n);
-        double *dst = static_cast<double*>(result.mutable_data());
-        double *src = mat.src;
+        if (n < 0 || (mat.len >= 0 && (py::ssize_t)n * n > mat.len)) {
+            throw std::out_of_range("matrix_diagonal: n out of range for mat");
+        }
+        // Explicit stride: this pybind11 builds a 1-D array_t(n) with stride 0.
+        const std::vector<py::ssize_t> shape{n}, strides{(py::ssize_t)sizeof(double)};
+        py::array_t<double> result(shape, strides);
+        auto out = result.mutable_unchecked<1>();
         for (int i = 0; i < n; i++) {
-            dst[i] = src[i + i * n];
+            out(i) = mat.src[i + i * n];
         }
         return result;
     }, py::arg("mat"), py::arg("n"),
@@ -3090,7 +3094,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         }
         const py::ssize_t n = stop - start;
         // Explicit stride: this pybind11 builds a 1-D array_t with stride 0, i.e.
-        // every element aliasing one slot (matrix_diagonal has the same defect).
+        // every element aliasing one slot.
         const std::vector<py::ssize_t> shape{n}, strides{(py::ssize_t)sizeof(int32_t)};
         py::array_t<int32_t> sat(shape, strides), rcv(shape, strides);
         py::array_t<double> L({n, (py::ssize_t)nf}), P({n, (py::ssize_t)nf});
