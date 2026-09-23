@@ -1581,14 +1581,14 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("freq",&obsd_t::freq)
         .def_readwrite("timevalid",&obsd_t::timevalid)
         .def_readwrite("eventime",&obsd_t::eventime)
-        .def_property_readonly("LLI",[](obsd_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.LLI,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("code",[](obsd_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.code,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("L",[](obsd_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.L,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("P",[](obsd_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.P,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("D",[](obsd_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.D,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("SNR",[](obsd_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.SNR,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("Lstd",[](obsd_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.Lstd,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("Pstd",[](obsd_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.Pstd,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("LLI",[](obsd_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.LLI,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("code",[](obsd_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.code,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("L",[](obsd_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.L,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("P",[](obsd_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.P,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("D",[](obsd_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.D,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("SNR",[](obsd_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.SNR,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("Lstd",[](obsd_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.Lstd,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("Pstd",[](obsd_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.Pstd,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](obsd_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<obs_t>(m,"obs_t").def(py::init())
@@ -1597,7 +1597,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("flag",&obs_t::flag)
         .def_readwrite("rcvcount",&obs_t::rcvcount)
         .def_readwrite("tmcount",&obs_t::tmcount)
-        .def_property("data",[](obs_t& o) {Arr1D<obsd_t>* tmp = new Arr1D<obsd_t>(o.data,-1);return tmp;},[](obs_t& o,Arr1D<obsd_t>arr){o.data=arr.src;},py::return_value_policy::reference)
+        .def_property("data",[](obs_t& o) {Arr1D<obsd_t>* tmp = new Arr1D<obsd_t>(o.data,-1);return tmp;},[](obs_t& o,Arr1D<obsd_t>& arr){o.data=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](obs_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<erpd_t>(m,"erpd_t").def(py::init())
@@ -1613,26 +1613,26 @@ PYBIND11_MODULE(pyrtklib5, m) {
     py::class_<erp_t>(m,"erp_t").def(py::init())
         .def_readwrite("n",&erp_t::n)
         .def_readwrite("nmax",&erp_t::nmax)
-        .def_property("data",[](erp_t& o) {Arr1D<erpd_t>* tmp = new Arr1D<erpd_t>(o.data,-1);return tmp;},[](erp_t& o,Arr1D<erpd_t>arr){o.data=arr.src;},py::return_value_policy::reference)
+        .def_property("data",[](erp_t& o) {Arr1D<erpd_t>* tmp = new Arr1D<erpd_t>(o.data,-1);return tmp;},[](erp_t& o,Arr1D<erpd_t>& arr){o.data=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](erp_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<pcv_t>(m,"pcv_t").def(py::init())
         .def_readwrite("sat",&pcv_t::sat)
         .def_readwrite("ts",&pcv_t::ts)
         .def_readwrite("te",&pcv_t::te)
-        .def_property_readonly("type",[](pcv_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.type,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("code",[](pcv_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.code,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("off",[](pcv_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.off,NFREQ, 3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("var",[](pcv_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.var,NFREQ,19);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("has_sys",[](pcv_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.has_sys,NSYSPCV);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("off_sys",[](pcv_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.off_sys,NSYSPCV*NFREQ, 3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("var_sys",[](pcv_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.var_sys,NSYSPCV*NFREQ,19);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("type",[](pcv_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.type,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("code",[](pcv_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.code,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("off",[](pcv_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.off,NFREQ, 3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("var",[](pcv_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.var,NFREQ,19);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("has_sys",[](pcv_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.has_sys,NSYSPCV);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("off_sys",[](pcv_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.off_sys,NSYSPCV*NFREQ, 3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("var_sys",[](pcv_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.var_sys,NSYSPCV*NFREQ,19);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](pcv_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<pcvs_t>(m,"pcvs_t").def(py::init())
         .def_readwrite("n",&pcvs_t::n)
         .def_readwrite("nmax",&pcvs_t::nmax)
-        .def_property("pcv",[](pcvs_t& o) {Arr1D<pcv_t>* tmp = new Arr1D<pcv_t>(o.pcv,-1);return tmp;},[](pcvs_t& o,Arr1D<pcv_t>arr){o.pcv=arr.src;},py::return_value_policy::reference)
+        .def_property("pcv",[](pcvs_t& o) {Arr1D<pcv_t>* tmp = new Arr1D<pcv_t>(o.pcv,-1);return tmp;},[](pcvs_t& o,Arr1D<pcv_t>& arr){o.pcv=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](pcvs_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<alm_t>(m,"alm_t").def(py::init())
@@ -1687,7 +1687,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("f2",&eph_t::f2)
         .def_readwrite("Adot",&eph_t::Adot)
         .def_readwrite("ndot",&eph_t::ndot)
-        .def_property_readonly("tgd",[](eph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.tgd,6);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("tgd",[](eph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.tgd,6);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](eph_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<geph_t>(m,"geph_t").def(py::init())
@@ -1703,27 +1703,27 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("taun",&geph_t::taun)
         .def_readwrite("gamn",&geph_t::gamn)
         .def_readwrite("dtaun",&geph_t::dtaun)
-        .def_property_readonly("pos",[](geph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("vel",[](geph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.vel,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("acc",[](geph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.acc,3);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("pos",[](geph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("vel",[](geph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.vel,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("acc",[](geph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.acc,3);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](geph_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<peph_t>(m,"peph_t").def(py::init())
         .def_readwrite("time",&peph_t::time)
         .def_readwrite("index",&peph_t::index)
-        .def_property_readonly("pos",[](peph_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.pos,MAXSAT,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("std",[](peph_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.std,MAXSAT,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("vel",[](peph_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.vel,MAXSAT,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("vst",[](peph_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.vst,MAXSAT,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("cov",[](peph_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.cov,MAXSAT,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("vco",[](peph_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.vco,MAXSAT,3);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("pos",[](peph_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.pos,MAXSAT,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("std",[](peph_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.std,MAXSAT,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("vel",[](peph_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.vel,MAXSAT,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("vst",[](peph_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.vst,MAXSAT,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("cov",[](peph_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.cov,MAXSAT,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("vco",[](peph_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.vco,MAXSAT,3);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](peph_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<pclk_t>(m,"pclk_t").def(py::init())
         .def_readwrite("time",&pclk_t::time)
         .def_readwrite("index",&pclk_t::index)
-        .def_property_readonly("clk",[](pclk_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.clk,MAXSAT,1);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("std",[](pclk_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.std,MAXSAT,1);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("clk",[](pclk_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.clk,MAXSAT,1);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("std",[](pclk_t& o) {Arr2D<float>* tmp = new Arr2D<float>(o.std,MAXSAT,1);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](pclk_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<seph_t>(m,"seph_t").def(py::init())
@@ -1734,9 +1734,9 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("svh",&seph_t::svh)
         .def_readwrite("af0",&seph_t::af0)
         .def_readwrite("af1",&seph_t::af1)
-        .def_property_readonly("pos",[](seph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("vel",[](seph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.vel,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("acc",[](seph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.acc,3);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("pos",[](seph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("vel",[](seph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.vel,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("acc",[](seph_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.acc,3);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](seph_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<tled_t>(m,"tled_t").def(py::init())
@@ -1754,27 +1754,27 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("M",&tled_t::M)
         .def_readwrite("n",&tled_t::n)
         .def_readwrite("rev",&tled_t::rev)
-        .def_property_readonly("name",[](tled_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.name,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("alias",[](tled_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.alias,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("satno",[](tled_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.satno,16);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("desig",[](tled_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.desig,16);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("name",[](tled_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.name,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("alias",[](tled_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.alias,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("satno",[](tled_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.satno,16);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("desig",[](tled_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.desig,16);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](tled_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<tle_t>(m,"tle_t").def(py::init())
         .def_readwrite("n",&tle_t::n)
         .def_readwrite("nmax",&tle_t::nmax)
-        .def_property("data",[](tle_t& o) {Arr1D<tled_t>* tmp = new Arr1D<tled_t>(o.data,-1);return tmp;},[](tle_t& o,Arr1D<tled_t>arr){o.data=arr.src;},py::return_value_policy::reference)
+        .def_property("data",[](tle_t& o) {Arr1D<tled_t>* tmp = new Arr1D<tled_t>(o.data,-1);return tmp;},[](tle_t& o,Arr1D<tled_t>& arr){o.data=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](tle_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<tec_t>(m,"tec_t").def(py::init())
         .def_readwrite("time",&tec_t::time)
         .def_readwrite("rb",&tec_t::rb)
-        .def_property_readonly("ndata",[](tec_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.ndata,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("lats",[](tec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.lats,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("lons",[](tec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.lons,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("hgts",[](tec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.hgts,3);return tmp;},py::return_value_policy::reference)
-        .def_property("data",[](tec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.data,-1);return tmp;},[](tec_t& o,Arr1D<double>arr){o.data=arr.src;},py::return_value_policy::reference)
-        .def_property("rms",[](tec_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.rms,-1);return tmp;},[](tec_t& o,Arr1D<float>arr){o.rms=arr.src;},py::return_value_policy::reference)
+        .def_property_readonly("ndata",[](tec_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.ndata,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("lats",[](tec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.lats,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("lons",[](tec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.lons,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("hgts",[](tec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.hgts,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property("data",[](tec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.data,-1);return tmp;},[](tec_t& o,Arr1D<double>& arr){o.data=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("rms",[](tec_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.rms,-1);return tmp;},[](tec_t& o,Arr1D<float>& arr){o.rms=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](tec_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<vtec_t>(m,"vtec_t").def(py::init())
@@ -1782,11 +1782,11 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("qi",&vtec_t::qi)
         .def_readwrite("iod",&vtec_t::iod)
         .def_readwrite("nlay",&vtec_t::nlay)
-        .def_property_readonly("nmax",[](vtec_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.nmax,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("mmax",[](vtec_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.mmax,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("hgt",[](vtec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.hgt,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("cosC",[](vtec_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.cosC,4,16);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("sinC",[](vtec_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.sinC,4,16);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("nmax",[](vtec_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.nmax,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("mmax",[](vtec_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.mmax,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("hgt",[](vtec_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.hgt,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("cosC",[](vtec_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.cosC,4,16);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("sinC",[](vtec_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.sinC,4,16);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](vtec_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<sbsmsg_t>(m,"sbsmsg_t").def(py::init())
@@ -1794,13 +1794,13 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("tow",&sbsmsg_t::tow)
         .def_readwrite("prn",&sbsmsg_t::prn)
         .def_readwrite("rcv",&sbsmsg_t::rcv)
-        .def_property_readonly("msg",[](sbsmsg_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.msg,29);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("msg",[](sbsmsg_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.msg,29);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](sbsmsg_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<sbs_t>(m,"sbs_t").def(py::init())
         .def_readwrite("n",&sbs_t::n)
         .def_readwrite("nmax",&sbs_t::nmax)
-        .def_property("msgs",[](sbs_t& o) {Arr1D<sbsmsg_t>* tmp = new Arr1D<sbsmsg_t>(o.msgs,-1);return tmp;},[](sbs_t& o,Arr1D<sbsmsg_t>arr){o.msgs=arr.src;},py::return_value_policy::reference)
+        .def_property("msgs",[](sbs_t& o) {Arr1D<sbsmsg_t>* tmp = new Arr1D<sbsmsg_t>(o.msgs,-1);return tmp;},[](sbs_t& o,Arr1D<sbsmsg_t>& arr){o.msgs=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](sbs_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<sbsfcorr_t>(m,"sbsfcorr_t").def(py::init())
@@ -1818,8 +1818,8 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("iode",&sbslcorr_t::iode)
         .def_readwrite("daf0",&sbslcorr_t::daf0)
         .def_readwrite("daf1",&sbslcorr_t::daf1)
-        .def_property_readonly("dpos",[](sbslcorr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dpos,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("dvel",[](sbslcorr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dvel,3);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("dpos",[](sbslcorr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dpos,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("dvel",[](sbslcorr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dvel,3);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](sbslcorr_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<sbssatp_t>(m,"sbssatp_t").def(py::init())
@@ -1832,7 +1832,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("iodp",&sbssat_t::iodp)
         .def_readwrite("nsat",&sbssat_t::nsat)
         .def_readwrite("tlat",&sbssat_t::tlat)
-        .def_property_readonly("sat",[](sbssat_t& o) {Arr1D<sbssatp_t>* tmp = new Arr1D<sbssatp_t>(o.sat,MAXSAT);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("sat",[](sbssat_t& o) {Arr1D<sbssatp_t>* tmp = new Arr1D<sbssatp_t>(o.sat,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](sbssat_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<sbsigp_t>(m,"sbsigp_t").def(py::init())
@@ -1847,13 +1847,13 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("x",&sbsigpband_t::x)
         .def_readwrite("bits",&sbsigpband_t::bits)
         .def_readwrite("bite",&sbsigpband_t::bite)
-        .def_property("y",[](sbsigpband_t& o) {Arr1D<int16_t>* tmp = new Arr1D<int16_t>(const_cast<int16_t*>(o.y),-1);return tmp;},[](sbsigpband_t& o,Arr1D<int16_t>arr){o.y=arr.src;},py::return_value_policy::reference)
+        .def_property("y",[](sbsigpband_t& o) {Arr1D<int16_t>* tmp = new Arr1D<int16_t>(const_cast<int16_t*>(o.y),-1);return tmp;},[](sbsigpband_t& o,Arr1D<int16_t>& arr){o.y=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](sbsigpband_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<sbsion_t>(m,"sbsion_t").def(py::init())
         .def_readwrite("iodi",&sbsion_t::iodi)
         .def_readwrite("nigp",&sbsion_t::nigp)
-        .def_property_readonly("igp",[](sbsion_t& o) {Arr1D<sbsigp_t>* tmp = new Arr1D<sbsigp_t>(o.igp,MAXNIGP);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("igp",[](sbsion_t& o) {Arr1D<sbsigp_t>* tmp = new Arr1D<sbsigp_t>(o.igp,MAXNIGP);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](sbsion_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<dgps_t>(m,"dgps_t").def(py::init())
@@ -1873,14 +1873,14 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("yaw_ang",&ssr_t::yaw_ang)
         .def_readwrite("yaw_rate",&ssr_t::yaw_rate)
         .def_readwrite("update",&ssr_t::update)
-        .def_property_readonly("t0",[](ssr_t& o) {Arr1D<gtime_t>* tmp = new Arr1D<gtime_t>(o.t0,6);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("udi",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.udi,6);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("iod",[](ssr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.iod,6);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("deph",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.deph,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ddeph",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ddeph,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("dclk",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dclk,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("cbias",[](ssr_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.cbias,MAXCODE);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("pbias",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pbias,MAXCODE);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("t0",[](ssr_t& o) {Arr1D<gtime_t>* tmp = new Arr1D<gtime_t>(o.t0,6);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("udi",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.udi,6);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("iod",[](ssr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.iod,6);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("deph",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.deph,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ddeph",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ddeph,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("dclk",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dclk,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("cbias",[](ssr_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.cbias,MAXCODE);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("pbias",[](ssr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pbias,MAXCODE);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](ssr_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<nav_t>(m,"nav_t").def(py::init())
@@ -1901,31 +1901,31 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("erp",&nav_t::erp)
         .def_readwrite("vtec",&nav_t::vtec)
         .def_readwrite("sbssat",&nav_t::sbssat)
-        .def_property("eph",[](nav_t& o) {Arr1D<eph_t>* tmp = new Arr1D<eph_t>(o.eph,-1);return tmp;},[](nav_t& o,Arr1D<eph_t>arr){o.eph=arr.src;},py::return_value_policy::reference)
-        .def_property("geph",[](nav_t& o) {Arr1D<geph_t>* tmp = new Arr1D<geph_t>(o.geph,-1);return tmp;},[](nav_t& o,Arr1D<geph_t>arr){o.geph=arr.src;},py::return_value_policy::reference)
-        .def_property("seph",[](nav_t& o) {Arr1D<seph_t>* tmp = new Arr1D<seph_t>(o.seph,-1);return tmp;},[](nav_t& o,Arr1D<seph_t>arr){o.seph=arr.src;},py::return_value_policy::reference)
-        .def_property("peph",[](nav_t& o) {Arr1D<peph_t>* tmp = new Arr1D<peph_t>(o.peph,-1);return tmp;},[](nav_t& o,Arr1D<peph_t>arr){o.peph=arr.src;},py::return_value_policy::reference)
-        .def_property("pclk",[](nav_t& o) {Arr1D<pclk_t>* tmp = new Arr1D<pclk_t>(o.pclk,-1);return tmp;},[](nav_t& o,Arr1D<pclk_t>arr){o.pclk=arr.src;},py::return_value_policy::reference)
-        .def_property("alm",[](nav_t& o) {Arr1D<alm_t>* tmp = new Arr1D<alm_t>(o.alm,-1);return tmp;},[](nav_t& o,Arr1D<alm_t>arr){o.alm=arr.src;},py::return_value_policy::reference)
-        .def_property("tec",[](nav_t& o) {Arr1D<tec_t>* tmp = new Arr1D<tec_t>(o.tec,-1);return tmp;},[](nav_t& o,Arr1D<tec_t>arr){o.tec=arr.src;},py::return_value_policy::reference)
-        .def_property_readonly("utc_gps",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_gps,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("utc_glo",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_glo,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("utc_gal",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_gal,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("utc_qzs",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_qzs,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("utc_cmp",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_cmp,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("utc_irn",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_irn,9);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("utc_sbs",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_sbs,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ion_gps",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_gps,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ion_gal",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_gal,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ion_qzs",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_qzs,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ion_cmp",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_cmp,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ion_irn",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_irn,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("glo_fcn",[](nav_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.glo_fcn,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("cbias",[](nav_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.cbias,MAXSAT,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("pcvs",[](nav_t& o) {Arr1D<pcv_t>* tmp = new Arr1D<pcv_t>(o.pcvs,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("sbsion",[](nav_t& o) {Arr1D<sbsion_t>* tmp = new Arr1D<sbsion_t>(o.sbsion,MAXBAND+1);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("dgps",[](nav_t& o) {Arr1D<dgps_t>* tmp = new Arr1D<dgps_t>(o.dgps,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ssr",[](nav_t& o) {Arr1D<ssr_t>* tmp = new Arr1D<ssr_t>(o.ssr,MAXSAT);return tmp;},py::return_value_policy::reference)
+        .def_property("eph",[](nav_t& o) {Arr1D<eph_t>* tmp = new Arr1D<eph_t>(o.eph,-1);return tmp;},[](nav_t& o,Arr1D<eph_t>& arr){o.eph=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("geph",[](nav_t& o) {Arr1D<geph_t>* tmp = new Arr1D<geph_t>(o.geph,-1);return tmp;},[](nav_t& o,Arr1D<geph_t>& arr){o.geph=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("seph",[](nav_t& o) {Arr1D<seph_t>* tmp = new Arr1D<seph_t>(o.seph,-1);return tmp;},[](nav_t& o,Arr1D<seph_t>& arr){o.seph=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("peph",[](nav_t& o) {Arr1D<peph_t>* tmp = new Arr1D<peph_t>(o.peph,-1);return tmp;},[](nav_t& o,Arr1D<peph_t>& arr){o.peph=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("pclk",[](nav_t& o) {Arr1D<pclk_t>* tmp = new Arr1D<pclk_t>(o.pclk,-1);return tmp;},[](nav_t& o,Arr1D<pclk_t>& arr){o.pclk=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("alm",[](nav_t& o) {Arr1D<alm_t>* tmp = new Arr1D<alm_t>(o.alm,-1);return tmp;},[](nav_t& o,Arr1D<alm_t>& arr){o.alm=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("tec",[](nav_t& o) {Arr1D<tec_t>* tmp = new Arr1D<tec_t>(o.tec,-1);return tmp;},[](nav_t& o,Arr1D<tec_t>& arr){o.tec=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property_readonly("utc_gps",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_gps,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("utc_glo",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_glo,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("utc_gal",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_gal,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("utc_qzs",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_qzs,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("utc_cmp",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_cmp,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("utc_irn",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_irn,9);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("utc_sbs",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.utc_sbs,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ion_gps",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_gps,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ion_gal",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_gal,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ion_qzs",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_qzs,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ion_cmp",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_cmp,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ion_irn",[](nav_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ion_irn,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("glo_fcn",[](nav_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.glo_fcn,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("cbias",[](nav_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.cbias,MAXSAT,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("pcvs",[](nav_t& o) {Arr1D<pcv_t>* tmp = new Arr1D<pcv_t>(o.pcvs,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("sbsion",[](nav_t& o) {Arr1D<sbsion_t>* tmp = new Arr1D<sbsion_t>(o.sbsion,MAXBAND+1);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("dgps",[](nav_t& o) {Arr1D<dgps_t>* tmp = new Arr1D<dgps_t>(o.dgps,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ssr",[](nav_t& o) {Arr1D<ssr_t>* tmp = new Arr1D<ssr_t>(o.ssr,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](nav_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<sta_t>(m,"sta_t").def(py::init())
@@ -1934,19 +1934,19 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("deltype",&sta_t::deltype)
         .def_readwrite("hgt",&sta_t::hgt)
         .def_readwrite("glo_cp_align",&sta_t::glo_cp_align)
-        .def_property_readonly("name",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.name,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("markerno",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.markerno,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("markertype",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.markertype,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("observer",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.observer,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("agency",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.agency,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("antdes",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.antdes,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("antsno",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.antsno,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("rectype",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.rectype,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("recver",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.recver,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("recsno",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.recsno,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("pos",[](sta_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("del",[](sta_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.del,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("glo_cp_bias",[](sta_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.glo_cp_bias,4);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("name",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.name,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("markerno",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.markerno,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("markertype",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.markertype,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("observer",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.observer,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("agency",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.agency,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("antdes",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.antdes,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("antsno",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.antsno,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rectype",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.rectype,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("recver",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.recver,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("recsno",[](sta_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.recsno,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("pos",[](sta_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("del",[](sta_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.del,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("glo_cp_bias",[](sta_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.glo_cp_bias,4);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](sta_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<sol_t>(m,"sol_t").def(py::init())
@@ -1961,10 +1961,10 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("prev_ratio2",&sol_t::prev_ratio2)
         .def_readwrite("thres",&sol_t::thres)
         .def_readwrite("refstationid",&sol_t::refstationid)
-        .def_property_readonly("rr",[](sol_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rr,6);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("qr",[](sol_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.qr,6);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("qv",[](sol_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.qv,6);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("dtr",[](sol_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dtr,6);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("rr",[](sol_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rr,6);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("qr",[](sol_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.qr,6);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("qv",[](sol_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.qv,6);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("dtr",[](sol_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dtr,6);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](sol_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<solbuf_t>(m,"solbuf_t").def(py::init())
@@ -1975,9 +1975,9 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("end",&solbuf_t::end)
         .def_readwrite("time",&solbuf_t::time)
         .def_readwrite("nb",&solbuf_t::nb)
-        .def_property("data",[](solbuf_t& o) {Arr1D<sol_t>* tmp = new Arr1D<sol_t>(o.data,-1);return tmp;},[](solbuf_t& o,Arr1D<sol_t>arr){o.data=arr.src;},py::return_value_policy::reference)
-        .def_property_readonly("rb",[](solbuf_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rb,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("buff",[](solbuf_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.buff,MAXSOLLEN+1);return tmp;},py::return_value_policy::reference)
+        .def_property("data",[](solbuf_t& o) {Arr1D<sol_t>* tmp = new Arr1D<sol_t>(o.data,-1);return tmp;},[](solbuf_t& o,Arr1D<sol_t>& arr){o.data=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rb",[](solbuf_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rb,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("buff",[](solbuf_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.buff,MAXSOLLEN+1);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](solbuf_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<solstat_t>(m,"solstat_t").def(py::init())
@@ -1999,7 +1999,7 @@ PYBIND11_MODULE(pyrtklib5, m) {
     py::class_<solstatbuf_t>(m,"solstatbuf_t").def(py::init())
         .def_readwrite("n",&solstatbuf_t::n)
         .def_readwrite("nmax",&solstatbuf_t::nmax)
-        .def_property("data",[](solstatbuf_t& o) {Arr1D<solstat_t>* tmp = new Arr1D<solstat_t>(o.data,-1);return tmp;},[](solstatbuf_t& o,Arr1D<solstat_t>arr){o.data=arr.src;},py::return_value_policy::reference)
+        .def_property("data",[](solstatbuf_t& o) {Arr1D<solstat_t>* tmp = new Arr1D<solstat_t>(o.data,-1);return tmp;},[](solstatbuf_t& o,Arr1D<solstat_t>& arr){o.data=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](solstatbuf_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<rtcm_t>(m,"rtcm_t").def(py::init())
@@ -2021,21 +2021,21 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("len",&rtcm_t::len)
         .def_readwrite("word",&rtcm_t::word)
         .def_readwrite("nmsg",&rtcm_t::nmsg)
-        .def_property("dgps",[](rtcm_t& o) {Arr1D<dgps_t>* tmp = new Arr1D<dgps_t>(o.dgps,-1);return tmp;},[](rtcm_t& o,Arr1D<dgps_t>arr){o.dgps=arr.src;},py::return_value_policy::reference)
-        .def_property_readonly("ssr",[](rtcm_t& o) {Arr1D<ssr_t>* tmp = new Arr1D<ssr_t>(o.ssr,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("msg",[](rtcm_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.msg,128);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("msgtype",[](rtcm_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.msgtype,256);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("msmtype",[](rtcm_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.msmtype,7,128);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("cp",[](rtcm_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.cp,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("lock",[](rtcm_t& o) {Arr2D<uint16_t>* tmp = new Arr2D<uint16_t>(o.lock,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("loss",[](rtcm_t& o) {Arr2D<uint16_t>* tmp = new Arr2D<uint16_t>(o.loss,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("lltime",[](rtcm_t& o) {Arr2D<gtime_t>* tmp = new Arr2D<gtime_t>(o.lltime,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("buff",[](rtcm_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.buff,1200);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("nmsg2",[](rtcm_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.nmsg2,100);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("nmsg3",[](rtcm_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.nmsg3,400);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("opt",[](rtcm_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.opt,256);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("msgs",[](rtcm_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.msgs,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("tint",[](rtcm_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.tint,32);return tmp;},py::return_value_policy::reference)
+        .def_property("dgps",[](rtcm_t& o) {Arr1D<dgps_t>* tmp = new Arr1D<dgps_t>(o.dgps,-1);return tmp;},[](rtcm_t& o,Arr1D<dgps_t>& arr){o.dgps=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ssr",[](rtcm_t& o) {Arr1D<ssr_t>* tmp = new Arr1D<ssr_t>(o.ssr,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("msg",[](rtcm_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.msg,128);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("msgtype",[](rtcm_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.msgtype,256);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("msmtype",[](rtcm_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.msmtype,7,128);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("cp",[](rtcm_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.cp,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("lock",[](rtcm_t& o) {Arr2D<uint16_t>* tmp = new Arr2D<uint16_t>(o.lock,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("loss",[](rtcm_t& o) {Arr2D<uint16_t>* tmp = new Arr2D<uint16_t>(o.loss,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("lltime",[](rtcm_t& o) {Arr2D<gtime_t>* tmp = new Arr2D<gtime_t>(o.lltime,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("buff",[](rtcm_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.buff,1200);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("nmsg2",[](rtcm_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.nmsg2,100);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("nmsg3",[](rtcm_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.nmsg3,400);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("opt",[](rtcm_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.opt,256);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("msgs",[](rtcm_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.msgs,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("tint",[](rtcm_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.tint,32);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](rtcm_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<rnxctr_t>(m,"rnxctr_t").def(py::init())
@@ -2049,27 +2049,27 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("sta",&rnxctr_t::sta)
         .def_readwrite("ephsat",&rnxctr_t::ephsat)
         .def_readwrite("ephset",&rnxctr_t::ephset)
-        .def_property_readonly("tobs",[](rnxctr_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.tobs,RNX_NUMSYS,MAXOBSTYPE);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("opt",[](rnxctr_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.opt,256);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("tobs",[](rnxctr_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.tobs,RNX_NUMSYS,MAXOBSTYPE);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("opt",[](rnxctr_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.opt,256);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](rnxctr_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<url_t>(m,"url_t").def(py::init())
         .def_readwrite("tint",&url_t::tint)
-        .def_property_readonly("type",[](url_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.type,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("path",[](url_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.path,1024);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("dir",[](url_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.dir,1024);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("type",[](url_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.type,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("path",[](url_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.path,1024);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("dir",[](url_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.dir,1024);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](url_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<opt_t>(m,"opt_t").def(py::init())
         .def_readwrite("format",&opt_t::format)
-        .def_property("name",[](opt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(const_cast<char*>(o.name),-1);return tmp;},[](opt_t& o,Arr1D<char>arr){o.name=arr.src;},py::return_value_policy::reference)
-        .def_property("var",[](opt_t& o) {Arr1D<void>* tmp = new Arr1D<void>(o.var,-1);return tmp;},[](opt_t& o,Arr1D<void>arr){o.var=arr.src;},py::return_value_policy::reference)
-        .def_property("comment",[](opt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(const_cast<char*>(o.comment),-1);return tmp;},[](opt_t& o,Arr1D<char>arr){o.comment=arr.src;},py::return_value_policy::reference)
+        .def_property("name",[](opt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(const_cast<char*>(o.name),-1);return tmp;},[](opt_t& o,Arr1D<char>& arr){o.name=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("var",[](opt_t& o) {Arr1D<void>* tmp = new Arr1D<void>(o.var,-1);return tmp;},[](opt_t& o,Arr1D<void>& arr){o.var=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("comment",[](opt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(const_cast<char*>(o.comment),-1);return tmp;},[](opt_t& o,Arr1D<char>& arr){o.comment=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](opt_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<snrmask_t>(m,"snrmask_t").def(py::init())
-        .def_property_readonly("ena",[](snrmask_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.ena,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("mask",[](snrmask_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.mask,MAXFREQ,9);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("ena",[](snrmask_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.ena,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("mask",[](snrmask_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.mask,MAXFREQ,9);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](snrmask_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<prcopt_t>(m,"prcopt_t").def(py::init())
@@ -2121,23 +2121,23 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("outsingle",&prcopt_t::outsingle)
         .def_readwrite("syncsol",&prcopt_t::syncsol)
         .def_readwrite("freqopt",&prcopt_t::freqopt)
-        .def_property_readonly("eratio",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.eratio,MAXFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("err",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.err,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("std",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.std,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("prn",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.prn,6);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("thresar",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.thresar,8);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("maxinno",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.maxinno,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("baseline",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.baseline,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ru",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ru,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("rb",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rb,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("anttype",[](prcopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.anttype,2,MAXANT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("antdel",[](prcopt_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.antdel,2,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("pcvr",[](prcopt_t& o) {Arr1D<pcv_t>* tmp = new Arr1D<pcv_t>(o.pcvr,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("exsats",[](prcopt_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.exsats,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("rnxopt",[](prcopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.rnxopt,2,256);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("posopt",[](prcopt_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.posopt,6);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("odisp",[](prcopt_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.odisp,2,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("pppopt",[](prcopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.pppopt,256);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("eratio",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.eratio,MAXFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("err",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.err,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("std",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.std,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("prn",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.prn,6);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("thresar",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.thresar,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("maxinno",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.maxinno,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("baseline",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.baseline,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ru",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.ru,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rb",[](prcopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rb,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("anttype",[](prcopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.anttype,2,MAXANT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("antdel",[](prcopt_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.antdel,2,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("pcvr",[](prcopt_t& o) {Arr1D<pcv_t>* tmp = new Arr1D<pcv_t>(o.pcvr,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("exsats",[](prcopt_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.exsats,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rnxopt",[](prcopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.rnxopt,2,256);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("posopt",[](prcopt_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.posopt,6);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("odisp",[](prcopt_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.odisp,2,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("pppopt",[](prcopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.pppopt,256);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](prcopt_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<solopt_t>(m,"solopt_t").def(py::init())
@@ -2156,24 +2156,24 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("sstat",&solopt_t::sstat)
         .def_readwrite("trace",&solopt_t::trace)
         .def_readwrite("maxsolstd",&solopt_t::maxsolstd)
-        .def_property_readonly("nmeaintv",[](solopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.nmeaintv,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("sep",[](solopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.sep,64);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("prog",[](solopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.prog,64);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("nmeaintv",[](solopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.nmeaintv,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("sep",[](solopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.sep,64);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("prog",[](solopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.prog,64);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](solopt_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<filopt_t>(m,"filopt_t").def(py::init())
-        .def_property_readonly("satantp",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.satantp,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("rcvantp",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.rcvantp,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("stapos",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.stapos,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("geoid",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.geoid,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("iono",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.iono,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("dcb",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.dcb,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("eop",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.eop,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("blq",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.blq,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("tempdir",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.tempdir,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("geexe",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.geexe,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("solstat",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.solstat,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("trace",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.trace,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("satantp",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.satantp,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rcvantp",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.rcvantp,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("stapos",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.stapos,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("geoid",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.geoid,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("iono",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.iono,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("dcb",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.dcb,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("eop",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.eop,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("blq",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.blq,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("tempdir",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.tempdir,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("geexe",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.geexe,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("solstat",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.solstat,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("trace",[](filopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.trace,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](filopt_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<rnxopt_t>(m,"rnxopt_t").def(py::init())
@@ -2197,60 +2197,60 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("tstart",&rnxopt_t::tstart)
         .def_readwrite("tend",&rnxopt_t::tend)
         .def_readwrite("trtcm",&rnxopt_t::trtcm)
-        .def_property_readonly("mask",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.mask,RNX_NUMSYS,MAXCODE+1);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("staid",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.staid,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("prog",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.prog,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("runby",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.runby,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("marker",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.marker,64);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("markerno",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.markerno,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("markertype",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.markertype,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("name",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.name,2,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("rec",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.rec,3,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ant",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.ant,3,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("apppos",[](rnxopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.apppos,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("antdel",[](rnxopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.antdel,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("glo_cp_bias",[](rnxopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.glo_cp_bias,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("comment",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.comment,MAXCOMMENT,64);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("rcvopt",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.rcvopt,256);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("exsats",[](rnxopt_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.exsats,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("glofcn",[](rnxopt_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.glofcn,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("tobs",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.tobs,RNX_NUMSYS,MAXOBSTYPE);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("shift",[](rnxopt_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.shift,RNX_NUMSYS,MAXOBSTYPE);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("nobs",[](rnxopt_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.nobs,RNX_NUMSYS);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("mask",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.mask,RNX_NUMSYS,MAXCODE+1);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("staid",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.staid,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("prog",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.prog,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("runby",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.runby,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("marker",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.marker,64);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("markerno",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.markerno,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("markertype",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.markertype,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("name",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.name,2,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rec",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.rec,3,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ant",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.ant,3,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("apppos",[](rnxopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.apppos,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("antdel",[](rnxopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.antdel,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("glo_cp_bias",[](rnxopt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.glo_cp_bias,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("comment",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.comment,MAXCOMMENT,64);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rcvopt",[](rnxopt_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.rcvopt,256);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("exsats",[](rnxopt_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.exsats,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("glofcn",[](rnxopt_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.glofcn,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("tobs",[](rnxopt_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.tobs,RNX_NUMSYS,MAXOBSTYPE);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("shift",[](rnxopt_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.shift,RNX_NUMSYS,MAXOBSTYPE);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("nobs",[](rnxopt_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.nobs,RNX_NUMSYS);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](rnxopt_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<ssat_t>(m,"ssat_t").def(py::init())
         .def_readwrite("sys",&ssat_t::sys)
         .def_readwrite("vs",&ssat_t::vs)
         .def_readwrite("phw",&ssat_t::phw)
-        .def_property_readonly("azel",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.azel,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("resp",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.resp,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("resc",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.resc,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("icbias",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.icbias,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("vsat",[](ssat_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.vsat,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("snr_rover",[](ssat_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.snr_rover,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("snr_base",[](ssat_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.snr_base,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("fix",[](ssat_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.fix,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("code",[](ssat_t& o) {Arr2D<int>* tmp = new Arr2D<int>(o.code,NFREQ,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("slip",[](ssat_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.slip,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("half",[](ssat_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.half,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("lock",[](ssat_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.lock,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("outc",[](ssat_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.outc,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("slipc",[](ssat_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.slipc,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("rejc",[](ssat_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.rejc,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("gf",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.gf,NFREQ-1);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("mw",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.mw,NFREQ-1);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("pt",[](ssat_t& o) {Arr2D<gtime_t>* tmp = new Arr2D<gtime_t>(o.pt,2,NFREQ);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ph",[](ssat_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.ph,2,NFREQ);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("azel",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.azel,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("resp",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.resp,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("resc",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.resc,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("icbias",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.icbias,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("vsat",[](ssat_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.vsat,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("snr_rover",[](ssat_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.snr_rover,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("snr_base",[](ssat_t& o) {Arr1D<float>* tmp = new Arr1D<float>(o.snr_base,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("fix",[](ssat_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.fix,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("code",[](ssat_t& o) {Arr2D<int>* tmp = new Arr2D<int>(o.code,NFREQ,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("slip",[](ssat_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.slip,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("half",[](ssat_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.half,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("lock",[](ssat_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.lock,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("outc",[](ssat_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.outc,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("slipc",[](ssat_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.slipc,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rejc",[](ssat_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.rejc,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("gf",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.gf,NFREQ-1);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("mw",[](ssat_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.mw,NFREQ-1);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("pt",[](ssat_t& o) {Arr2D<gtime_t>* tmp = new Arr2D<gtime_t>(o.pt,2,NFREQ);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ph",[](ssat_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.ph,2,NFREQ);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](ssat_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<ambc_t>(m,"ambc_t").def(py::init())
         .def_readwrite("fixcnt",&ambc_t::fixcnt)
-        .def_property_readonly("epoch",[](ambc_t& o) {Arr1D<gtime_t>* tmp = new Arr1D<gtime_t>(o.epoch,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("n",[](ambc_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.n,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("LC",[](ambc_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.LC,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("LCv",[](ambc_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.LCv,4);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("flags",[](ambc_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.flags,MAXSAT);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("epoch",[](ambc_t& o) {Arr1D<gtime_t>* tmp = new Arr1D<gtime_t>(o.epoch,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("n",[](ambc_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.n,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("LC",[](ambc_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.LC,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("LCv",[](ambc_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.LCv,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("flags",[](ambc_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.flags,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](ambc_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<rtk_t>(m,"rtk_t").def(py::init())
@@ -2268,15 +2268,15 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("epoch",&rtk_t::epoch)
         .def_readwrite("intpres_nb",&rtk_t::intpres_nb)
         .def_readwrite("vtec_used",&rtk_t::vtec_used)
-        .def_property_readonly("rb",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rb,6);return tmp;},py::return_value_policy::reference)
-        .def_property("x",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.x,-1);return tmp;},[](rtk_t& o,Arr1D<double>arr){o.x=arr.src;},py::return_value_policy::reference)
-        .def_property("P",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.P,-1);return tmp;},[](rtk_t& o,Arr1D<double>arr){o.P=arr.src;},py::return_value_policy::reference)
-        .def_property("xa",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.xa,-1);return tmp;},[](rtk_t& o,Arr1D<double>arr){o.xa=arr.src;},py::return_value_policy::reference)
-        .def_property("Pa",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.Pa,-1);return tmp;},[](rtk_t& o,Arr1D<double>arr){o.Pa=arr.src;},py::return_value_policy::reference)
-        .def_property_readonly("ambc",[](rtk_t& o) {Arr1D<ambc_t>* tmp = new Arr1D<ambc_t>(o.ambc,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ssat",[](rtk_t& o) {Arr1D<ssat_t>* tmp = new Arr1D<ssat_t>(o.ssat,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("errbuf",[](rtk_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.errbuf,MAXERRMSG);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("intpres_obsb",[](rtk_t& o) {Arr1D<obsd_t>* tmp = new Arr1D<obsd_t>(o.intpres_obsb,MAXOBS);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("rb",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rb,6);return tmp;},py::return_value_policy::take_ownership)
+        .def_property("x",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.x,-1);return tmp;},[](rtk_t& o,Arr1D<double>& arr){o.x=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("P",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.P,-1);return tmp;},[](rtk_t& o,Arr1D<double>& arr){o.P=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("xa",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.xa,-1);return tmp;},[](rtk_t& o,Arr1D<double>& arr){o.xa=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("Pa",[](rtk_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.Pa,-1);return tmp;},[](rtk_t& o,Arr1D<double>& arr){o.Pa=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ambc",[](rtk_t& o) {Arr1D<ambc_t>* tmp = new Arr1D<ambc_t>(o.ambc,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ssat",[](rtk_t& o) {Arr1D<ssat_t>* tmp = new Arr1D<ssat_t>(o.ssat,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("errbuf",[](rtk_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.errbuf,MAXERRMSG);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("intpres_obsb",[](rtk_t& o) {Arr1D<obsd_t>* tmp = new Arr1D<obsd_t>(o.intpres_obsb,MAXOBS);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](rtk_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<raw_t>(m,"raw_t").def(py::init())
@@ -2297,18 +2297,18 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("outtype",&raw_t::outtype)
         .def_readwrite("format",&raw_t::format)
         .def_readwrite("rcvtype",&raw_t::rcvtype)
-        .def_property_readonly("tobs",[](raw_t& o) {Arr2D<gtime_t>* tmp = new Arr2D<gtime_t>(o.tobs,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("msgtype",[](raw_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.msgtype,256);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("subfrm",[](raw_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.subfrm,MAXSAT,380);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("lockt",[](raw_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.lockt,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("lockflag",[](raw_t& o) {Arr2D<unsigned char>* tmp = new Arr2D<unsigned char>(o.lockflag,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("prCA",[](raw_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.prCA,MAXSAT,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("dpCA",[](raw_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dpCA,MAXSAT);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("halfc",[](raw_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.halfc,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("freqn",[](raw_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.freqn,MAXOBS);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("buff",[](raw_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.buff,MAXRAWLEN);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("opt",[](raw_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.opt,256);return tmp;},py::return_value_policy::reference)
-        .def_property("rcv_data",[](raw_t& o) {Arr1D<void>* tmp = new Arr1D<void>(o.rcv_data,-1);return tmp;},[](raw_t& o,Arr1D<void>arr){o.rcv_data=arr.src;},py::return_value_policy::reference)
+        .def_property_readonly("tobs",[](raw_t& o) {Arr2D<gtime_t>* tmp = new Arr2D<gtime_t>(o.tobs,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("msgtype",[](raw_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.msgtype,256);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("subfrm",[](raw_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.subfrm,MAXSAT,380);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("lockt",[](raw_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.lockt,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("lockflag",[](raw_t& o) {Arr2D<unsigned char>* tmp = new Arr2D<unsigned char>(o.lockflag,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("prCA",[](raw_t& o) {Arr2D<double>* tmp = new Arr2D<double>(o.prCA,MAXSAT,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("dpCA",[](raw_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.dpCA,MAXSAT);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("halfc",[](raw_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.halfc,MAXSAT,NFREQ+NEXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("freqn",[](raw_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.freqn,MAXOBS);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("buff",[](raw_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.buff,MAXRAWLEN);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("opt",[](raw_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.opt,256);return tmp;},py::return_value_policy::take_ownership)
+        .def_property("rcv_data",[](raw_t& o) {Arr1D<void>* tmp = new Arr1D<void>(o.rcv_data,-1);return tmp;},[](raw_t& o,Arr1D<void>& arr){o.rcv_data=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](raw_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<stream_t>(m,"stream_t").def(py::init())
@@ -2324,9 +2324,9 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("tact",&stream_t::tact)
         .def_readwrite("inbt",&stream_t::inbt)
         .def_readwrite("outbt",&stream_t::outbt)
-        .def_property("port",[](stream_t& o) {Arr1D<void>* tmp = new Arr1D<void>(o.port,-1);return tmp;},[](stream_t& o,Arr1D<void>arr){o.port=arr.src;},py::return_value_policy::reference)
-        .def_property_readonly("path",[](stream_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.path,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("msg",[](stream_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.msg,MAXSTRMSG);return tmp;},py::return_value_policy::reference)
+        .def_property("port",[](stream_t& o) {Arr1D<void>* tmp = new Arr1D<void>(o.port,-1);return tmp;},[](stream_t& o,Arr1D<void>& arr){o.port=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property_readonly("path",[](stream_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.path,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("msg",[](stream_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.msg,MAXSTRMSG);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](stream_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<strconv_t>(m,"strconv_t").def(py::init())
@@ -2336,8 +2336,8 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("rtcm",&strconv_t::rtcm)
         .def_readwrite("raw",&strconv_t::raw)
         .def_readwrite("out",&strconv_t::out)
-        .def_property_readonly("tick",[](strconv_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.tick,32);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ephsat",[](strconv_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.ephsat,32);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("tick",[](strconv_t& o) {Arr1D<uint32_t>* tmp = new Arr1D<uint32_t>(o.tick,32);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ephsat",[](strconv_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.ephsat,32);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](strconv_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<strsvr_t>(m,"strsvr_t").def(py::init())
@@ -2349,13 +2349,13 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("nstr",&strsvr_t::nstr)
         .def_readwrite("npb",&strsvr_t::npb)
         .def_readwrite("tick",&strsvr_t::tick)
-        .def_property_readonly("cmds_periodic",[](strsvr_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.cmds_periodic,16,MAXRCVCMD);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("nmeapos",[](strsvr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.nmeapos,3);return tmp;},py::return_value_policy::reference)
-        .def_property("buff",[](strsvr_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.buff,-1);return tmp;},[](strsvr_t& o,Arr1D<uint8_t>arr){o.buff=arr.src;},py::return_value_policy::reference)
-        .def_property("pbuf",[](strsvr_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.pbuf,-1);return tmp;},[](strsvr_t& o,Arr1D<uint8_t>arr){o.pbuf=arr.src;},py::return_value_policy::reference)
-        .def_property_readonly("stream",[](strsvr_t& o) {Arr1D<stream_t>* tmp = new Arr1D<stream_t>(o.stream,16);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("strlog",[](strsvr_t& o) {Arr1D<stream_t>* tmp = new Arr1D<stream_t>(o.strlog,16);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("conv",[](strsvr_t& o) {Arr2D<strconv_t>* tmp = new Arr2D<strconv_t>(o.conv,-1,16);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("cmds_periodic",[](strsvr_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.cmds_periodic,16,MAXRCVCMD);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("nmeapos",[](strsvr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.nmeapos,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property("buff",[](strsvr_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.buff,-1);return tmp;},[](strsvr_t& o,Arr1D<uint8_t>& arr){o.buff=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("pbuf",[](strsvr_t& o) {Arr1D<uint8_t>* tmp = new Arr1D<uint8_t>(o.pbuf,-1);return tmp;},[](strsvr_t& o,Arr1D<uint8_t>& arr){o.pbuf=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property_readonly("stream",[](strsvr_t& o) {Arr1D<stream_t>* tmp = new Arr1D<stream_t>(o.stream,16);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("strlog",[](strsvr_t& o) {Arr1D<stream_t>* tmp = new Arr1D<stream_t>(o.strlog,16);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("conv",[](strsvr_t& o) {Arr2D<strconv_t>* tmp = new Arr2D<strconv_t>(o.conv,-1,16);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](strsvr_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<rtksvr_t>(m,"rtksvr_t").def(py::init())
@@ -2375,57 +2375,57 @@ PYBIND11_MODULE(pyrtklib5, m) {
         .def_readwrite("nave",&rtksvr_t::nave)
         .def_readwrite("bl_reset",&rtksvr_t::bl_reset)
         .def_readwrite("pcvsr",&rtksvr_t::pcvsr)
-        .def_property_readonly("nmeapos",[](rtksvr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.nmeapos,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("format",[](rtksvr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.format,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("solopt",[](rtksvr_t& o) {Arr1D<solopt_t>* tmp = new Arr1D<solopt_t>(o.solopt,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("nb",[](rtksvr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.nb,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("nsb",[](rtksvr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.nsb,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("npb",[](rtksvr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.npb,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("buff",[](rtksvr_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.buff,-1,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("sbuf",[](rtksvr_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.sbuf,-1,2);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("pbuf",[](rtksvr_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.pbuf,-1,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("solbuf",[](rtksvr_t& o) {Arr1D<sol_t>* tmp = new Arr1D<sol_t>(o.solbuf,MAXSOLBUF);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("nmsg",[](rtksvr_t& o) {Arr2D<uint32_t>* tmp = new Arr2D<uint32_t>(o.nmsg,3,10);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("raw",[](rtksvr_t& o) {Arr1D<raw_t>* tmp = new Arr1D<raw_t>(o.raw,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("rtcm",[](rtksvr_t& o) {Arr1D<rtcm_t>* tmp = new Arr1D<rtcm_t>(o.rtcm,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("ftime",[](rtksvr_t& o) {Arr1D<gtime_t>* tmp = new Arr1D<gtime_t>(o.ftime,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("files",[](rtksvr_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.files,3,MAXSTRPATH);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("obs",[](rtksvr_t& o) {Arr2D<obs_t>* tmp = new Arr2D<obs_t>(o.obs,3,MAXOBSBUF);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("sbsmsg",[](rtksvr_t& o) {Arr1D<sbsmsg_t>* tmp = new Arr1D<sbsmsg_t>(o.sbsmsg,MAXSBSMSG);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("stream",[](rtksvr_t& o) {Arr1D<stream_t>* tmp = new Arr1D<stream_t>(o.stream,8);return tmp;},py::return_value_policy::reference)
-        .def_property("moni",[](rtksvr_t& o) {Arr1D<stream_t>* tmp = new Arr1D<stream_t>(o.moni,-1);return tmp;},[](rtksvr_t& o,Arr1D<stream_t>arr){o.moni=arr.src;},py::return_value_policy::reference)
-        .def_property_readonly("rb_ave",[](rtksvr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rb_ave,3);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("cmds_periodic",[](rtksvr_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.cmds_periodic,3,MAXRCVCMD);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("cmd_reset",[](rtksvr_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.cmd_reset,MAXRCVCMD);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("nmeapos",[](rtksvr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.nmeapos,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("format",[](rtksvr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.format,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("solopt",[](rtksvr_t& o) {Arr1D<solopt_t>* tmp = new Arr1D<solopt_t>(o.solopt,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("nb",[](rtksvr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.nb,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("nsb",[](rtksvr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.nsb,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("npb",[](rtksvr_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.npb,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("buff",[](rtksvr_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.buff,-1,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("sbuf",[](rtksvr_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.sbuf,-1,2);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("pbuf",[](rtksvr_t& o) {Arr2D<uint8_t>* tmp = new Arr2D<uint8_t>(o.pbuf,-1,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("solbuf",[](rtksvr_t& o) {Arr1D<sol_t>* tmp = new Arr1D<sol_t>(o.solbuf,MAXSOLBUF);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("nmsg",[](rtksvr_t& o) {Arr2D<uint32_t>* tmp = new Arr2D<uint32_t>(o.nmsg,3,10);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("raw",[](rtksvr_t& o) {Arr1D<raw_t>* tmp = new Arr1D<raw_t>(o.raw,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rtcm",[](rtksvr_t& o) {Arr1D<rtcm_t>* tmp = new Arr1D<rtcm_t>(o.rtcm,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("ftime",[](rtksvr_t& o) {Arr1D<gtime_t>* tmp = new Arr1D<gtime_t>(o.ftime,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("files",[](rtksvr_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.files,3,MAXSTRPATH);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("obs",[](rtksvr_t& o) {Arr2D<obs_t>* tmp = new Arr2D<obs_t>(o.obs,3,MAXOBSBUF);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("sbsmsg",[](rtksvr_t& o) {Arr1D<sbsmsg_t>* tmp = new Arr1D<sbsmsg_t>(o.sbsmsg,MAXSBSMSG);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("stream",[](rtksvr_t& o) {Arr1D<stream_t>* tmp = new Arr1D<stream_t>(o.stream,8);return tmp;},py::return_value_policy::take_ownership)
+        .def_property("moni",[](rtksvr_t& o) {Arr1D<stream_t>* tmp = new Arr1D<stream_t>(o.moni,-1);return tmp;},[](rtksvr_t& o,Arr1D<stream_t>& arr){o.moni=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property_readonly("rb_ave",[](rtksvr_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.rb_ave,3);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("cmds_periodic",[](rtksvr_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.cmds_periodic,3,MAXRCVCMD);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("cmd_reset",[](rtksvr_t& o) {Arr1D<char>* tmp = new Arr1D<char>(o.cmd_reset,MAXRCVCMD);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](rtksvr_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<gis_pnt_t>(m,"gis_pnt_t").def(py::init())
-        .def_property_readonly("pos",[](gis_pnt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,3);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("pos",[](gis_pnt_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,3);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](gis_pnt_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<gis_poly_t>(m,"gis_poly_t").def(py::init())
         .def_readwrite("npnt",&gis_poly_t::npnt)
-        .def_property_readonly("bound",[](gis_poly_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.bound,4);return tmp;},py::return_value_policy::reference)
-        .def_property("pos",[](gis_poly_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,-1);return tmp;},[](gis_poly_t& o,Arr1D<double>arr){o.pos=arr.src;},py::return_value_policy::reference)
+        .def_property_readonly("bound",[](gis_poly_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.bound,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property("pos",[](gis_poly_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,-1);return tmp;},[](gis_poly_t& o,Arr1D<double>& arr){o.pos=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](gis_poly_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<gis_polygon_t>(m,"gis_polygon_t").def(py::init())
         .def_readwrite("npnt",&gis_polygon_t::npnt)
-        .def_property_readonly("bound",[](gis_polygon_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.bound,4);return tmp;},py::return_value_policy::reference)
-        .def_property("pos",[](gis_polygon_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,-1);return tmp;},[](gis_polygon_t& o,Arr1D<double>arr){o.pos=arr.src;},py::return_value_policy::reference)
+        .def_property_readonly("bound",[](gis_polygon_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.bound,4);return tmp;},py::return_value_policy::take_ownership)
+        .def_property("pos",[](gis_polygon_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.pos,-1);return tmp;},[](gis_polygon_t& o,Arr1D<double>& arr){o.pos=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](gis_polygon_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<gisd_t>(m,"gisd_t").def(py::init())
         .def_readwrite("type",&gisd_t::type)
-        .def_property("data",[](gisd_t& o) {Arr1D<void>* tmp = new Arr1D<void>(o.data,-1);return tmp;},[](gisd_t& o,Arr1D<void>arr){o.data=arr.src;},py::return_value_policy::reference)
-        .def_property("next",[](gisd_t& o) {Arr1D<gisd_t>* tmp = new Arr1D<gisd_t>(o.next,-1);return tmp;},[](gisd_t& o,Arr1D<gisd_t>arr){o.next=arr.src;},py::return_value_policy::reference)
+        .def_property("data",[](gisd_t& o) {Arr1D<void>* tmp = new Arr1D<void>(o.data,-1);return tmp;},[](gisd_t& o,Arr1D<void>& arr){o.data=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
+        .def_property("next",[](gisd_t& o) {Arr1D<gisd_t>* tmp = new Arr1D<gisd_t>(o.next,-1);return tmp;},[](gisd_t& o,Arr1D<gisd_t>& arr){o.next=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](gisd_t& o){return &o;},py::return_value_policy::reference);
 
     py::class_<gis_t>(m,"gis_t").def(py::init())
-        .def_property_readonly("name",[](gis_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.name,MAXGISLAYER,256);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("flag",[](gis_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.flag,MAXGISLAYER);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("data",[](gis_t& o) {Arr2D<gisd_t>* tmp = new Arr2D<gisd_t>(o.data,-1,MAXGISLAYER);return tmp;},py::return_value_policy::reference)
-        .def_property_readonly("bound",[](gis_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.bound,4);return tmp;},py::return_value_policy::reference)
+        .def_property_readonly("name",[](gis_t& o) {Arr2D<char>* tmp = new Arr2D<char>(o.name,MAXGISLAYER,256);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("flag",[](gis_t& o) {Arr1D<int>* tmp = new Arr1D<int>(o.flag,MAXGISLAYER);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("data",[](gis_t& o) {Arr2D<gisd_t>* tmp = new Arr2D<gisd_t>(o.data,-1,MAXGISLAYER);return tmp;},py::return_value_policy::take_ownership)
+        .def_property_readonly("bound",[](gis_t& o) {Arr1D<double>* tmp = new Arr1D<double>(o.bound,4);return tmp;},py::return_value_policy::take_ownership)
         .def_property_readonly("ptr",[](gis_t& o){return &o;},py::return_value_policy::reference);
 
     m.attr("chisqr") = new Arr1D<double>((void*)chisqr,-1);
@@ -3075,6 +3075,137 @@ PYBIND11_MODULE(pyrtklib5, m) {
         result["fix_flags"]  = np_reshape(fix,  py::make_tuple(ns, nf));
         return result;
     }, "Bulk extract fixed ambiguities after LAMBDA");
+
+    /* ---- bulk observation helpers: one call per epoch instead of a Python loop
+       per observation (and per frequency) on the streaming per-epoch path ---- */
+
+    /* sat, rcv and the first nf L/P slots of data[start:stop]; data may be an
+       obs_t.data view of unknown length, so the range is the caller's (obs.n) */
+    m.def("obs_columns",
+        [](Arr1D<obsd_t> &data, int start, int stop, int nf) -> py::dict
+    {
+        if (start < 0 || stop < start || nf < 0 || nf > NFREQ + NEXOBS
+            || (data.len >= 0 && stop > data.len)) {
+            throw std::out_of_range("obs_columns: invalid start/stop/nf");
+        }
+        const py::ssize_t n = stop - start;
+        // Explicit stride: this pybind11 builds a 1-D array_t with stride 0, i.e.
+        // every element aliasing one slot (matrix_diagonal has the same defect).
+        const std::vector<py::ssize_t> shape{n}, strides{(py::ssize_t)sizeof(int32_t)};
+        py::array_t<int32_t> sat(shape, strides), rcv(shape, strides);
+        py::array_t<double> L({n, (py::ssize_t)nf}), P({n, (py::ssize_t)nf});
+        auto sat_out = sat.mutable_unchecked<1>();
+        auto rcv_out = rcv.mutable_unchecked<1>();
+        auto L_out = L.mutable_unchecked<2>();
+        auto P_out = P.mutable_unchecked<2>();
+        for (py::ssize_t i = 0; i < n; i++) {
+            const obsd_t &d = data.src[start + i];
+            sat_out(i) = d.sat;
+            rcv_out(i) = d.rcv;
+            for (int f = 0; f < nf; f++) {
+                L_out(i, f) = d.L[f];
+                P_out(i, f) = d.P[f];
+            }
+        }
+        py::dict result;
+        result["sat"] = sat;
+        result["rcv"] = rcv;
+        result["L"] = L;
+        result["P"] = P;
+        return result;
+    }, py::arg("data"), py::arg("start"), py::arg("stop"), py::arg("nf"),
+       "sat/rcv (n,) and L/P (n,nf) of data[start:stop] as numpy arrays");
+
+    /* copy src.data[indices] into dst.data[dst_start:], optionally stamping rcv */
+    m.def("obs_gather",
+        [](obs_t &dst, int dst_start, obs_t &src,
+           py::array_t<int32_t, py::array::c_style | py::array::forcecast> indices,
+           int rcv) -> int
+    {
+        auto idx = indices.unchecked<1>();
+        const py::ssize_t count = idx.shape(0);
+        if (dst_start < 0 || dst_start + count > dst.nmax) {
+            throw std::out_of_range("obs_gather: destination too small");
+        }
+        for (py::ssize_t k = 0; k < count; k++) {
+            const int i = idx(k);
+            if (i < 0 || i >= src.n) {
+                throw std::out_of_range("obs_gather: index outside src.n");
+            }
+            dst.data[dst_start + k] = src.data[i];
+            if (rcv > 0) {
+                dst.data[dst_start + k].rcv = (uint8_t)rcv;
+            }
+        }
+        return dst_start + (int)count;
+    }, py::arg("dst"), py::arg("dst_start"), py::arg("src"), py::arg("indices"),
+       py::arg("rcv") = 0,
+       "Copy src.data[indices] to dst.data[dst_start:]; rcv > 0 overwrites rcv. "
+       "Returns the new fill level.");
+
+    /* fill obs.data[0:n] from per-satellite rows; row i uses its first count[i]
+       (slot, code, L, P, SNR, LLI) entries */
+    m.def("obs_fill",
+        [](obs_t &obs, gtime_t time, int rcv,
+           py::array_t<int32_t, py::array::c_style | py::array::forcecast> sat,
+           py::array_t<int32_t, py::array::c_style | py::array::forcecast> count,
+           py::array_t<int32_t, py::array::c_style | py::array::forcecast> slot,
+           py::array_t<uint8_t, py::array::c_style | py::array::forcecast> code,
+           py::array_t<double, py::array::c_style | py::array::forcecast> L,
+           py::array_t<double, py::array::c_style | py::array::forcecast> P,
+           py::array_t<float, py::array::c_style | py::array::forcecast> SNR,
+           py::array_t<uint8_t, py::array::c_style | py::array::forcecast> LLI)
+    {
+        auto sat_in = sat.unchecked<1>();
+        auto count_in = count.unchecked<1>();
+        auto slot_in = slot.unchecked<2>();
+        auto code_in = code.unchecked<2>();
+        auto L_in = L.unchecked<2>();
+        auto P_in = P.unchecked<2>();
+        auto SNR_in = SNR.unchecked<2>();
+        auto LLI_in = LLI.unchecked<2>();
+        const py::ssize_t n = sat_in.shape(0);
+        const py::ssize_t width = slot_in.shape(1);
+        if (n > obs.nmax || count_in.shape(0) != n || slot_in.shape(0) != n
+            || code_in.shape(0) != n || L_in.shape(0) != n || P_in.shape(0) != n
+            || SNR_in.shape(0) != n || LLI_in.shape(0) != n
+            || code_in.shape(1) != width || L_in.shape(1) != width
+            || P_in.shape(1) != width || SNR_in.shape(1) != width
+            || LLI_in.shape(1) != width) {
+            throw std::invalid_argument("obs_fill: inconsistent array shapes");
+        }
+        for (py::ssize_t i = 0; i < n; i++) {
+            obsd_t &d = obs.data[i];
+            d.time = time;
+            d.sat = (uint8_t)sat_in(i);
+            d.rcv = (uint8_t)rcv;
+            if (count_in(i) < 0 || count_in(i) > width) {
+                throw std::out_of_range("obs_fill: count outside row width");
+            }
+            for (int j = 0; j < count_in(i); j++) {
+                const int s = slot_in(i, j);
+                if (s < 0 || s >= NFREQ + NEXOBS) {
+                    throw std::out_of_range("obs_fill: slot outside NFREQ+NEXOBS");
+                }
+                d.L[s] = L_in(i, j);
+                d.P[s] = P_in(i, j);
+                d.code[s] = code_in(i, j);
+                d.SNR[s] = SNR_in(i, j);
+                d.LLI[s] = LLI_in(i, j);
+            }
+        }
+    }, py::arg("obs"), py::arg("time"), py::arg("rcv"), py::arg("sat"),
+       py::arg("count"), py::arg("slot"), py::arg("code"), py::arg("L"),
+       py::arg("P"), py::arg("SNR"), py::arg("LLI"),
+       "Fill obs.data[0:n] (time/sat/rcv and per-slot L/P/code/SNR/LLI) from arrays");
+
+    /* the encoded message(s) gen_rtcm3 left in rtcm.buff */
+    m.def("rtcm_output_bytes", [](rtcm_t &rtcm) {
+        if (rtcm.nbyte < 0 || rtcm.nbyte > (int)sizeof(rtcm.buff)) {
+            throw std::out_of_range("rtcm_output_bytes: nbyte outside buff");
+        }
+        return py::bytes(reinterpret_cast<const char*>(rtcm.buff), rtcm.nbyte);
+    }, py::arg("rtcm"), "rtcm.buff[0:nbyte] as bytes");
     /* ==== END HANDMERGE ==== */
 
 }

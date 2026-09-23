@@ -77,7 +77,9 @@ footer = '''
 bindTemp = '    bindArr1D<%s>(m,"%s");\n    bindArr2D<%s>(m,"%s");\n'
 structTemp = '    py::class_<%s>(m,"%s").def(py::init())\n'
 structMemTemp = '        .def_readwrite("%s",&%s::%s)\n'
-structProperTemp = '''        .def_property_readonly("%s",[](%s& o) {%s* tmp = new %s(%s);return tmp;},py::return_value_policy::reference)\n'''
+# take_ownership deletes the (non-owning) view wrapper once Python drops it; the
+# struct memory it points into is untouched. `reference` leaked one wrapper per access.
+structProperTemp = '''        .def_property_readonly("%s",[](%s& o) {%s* tmp = new %s(%s);return tmp;},py::return_value_policy::take_ownership)\n'''
 # structProperTemp = '''        .def_property_readonly("%s",[](py::object& obj) {
 #             %s& o = obj.cast<%s&>();
 # 			%s* retv;
@@ -106,7 +108,9 @@ def gen_struct(struct):
 			if i['dims'][0] == '*':
 				dim.append('-1')
 				ttype = 'Arr1D'+'<'+i['type']+'>'
-				temp += '''        .def_property("%s",[](%s& o) {%s* tmp = new %s(%s);return tmp;},[](%s& o,Arr1D<%s>arr){o.%s=arr.src;},py::return_value_policy::reference)\n'''%(i['name'],name,ttype,ttype,"o."+i['name']+',-1',name,i['type'],i['name'])
+				# The setter moves ownership of the buffer into the struct, whose RTKLIB
+				# free function (freeobs, ...) releases it.
+				temp += '''        .def_property("%s",[](%s& o) {%s* tmp = new %s(%s);return tmp;},[](%s& o,Arr1D<%s>& arr){o.%s=arr.src;arr.owned=false;},py::return_value_policy::take_ownership)\n'''%(i['name'],name,ttype,ttype,"o."+i['name']+',-1',name,i['type'],i['name'])
 			else:
 				if i['dims'][0] == '':
 					dim.append('-1')

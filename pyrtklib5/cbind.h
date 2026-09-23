@@ -12,13 +12,14 @@ namespace py = pybind11;
     .def(py::init([](Type* src,int len){return std::unique_ptr<Arr1D<Type>>(new Arr1D<Type>((void*)src,len));}))\
     .def("__len__",[](Arr1D<Type> &arr){return &arr.len;})\
     .def("__getitem__",[](Arr1D<Type> &arr,int i){return arr.src+i;},py::return_value_policy::reference)\
-    .def("__getitem__",[](Arr1D<Type> &arr,py::slice slice){Py_ssize_t start,stop,step;PySlice_Unpack(slice.ptr(),&start,&stop,&step);return new Arr1D<Type>(arr.src+start,stop-start);},py::return_value_policy::reference)\
+    .def("__getitem__",[](Arr1D<Type> &arr,py::slice slice){Py_ssize_t start,stop,step;PySlice_Unpack(slice.ptr(),&start,&stop,&step);return new Arr1D<Type>(arr.src+start,stop-start);},py::return_value_policy::take_ownership)\
     .def("__setitem__",[](Arr1D<Type> &arr,int i, Type v){arr.src[i]=v;})\
     .def("__iter__",[](Arr1D<Type> &arr){return pybind11::make_iterator(arr.src,arr.src+arr.len);})\
     .def("deepcopy",static_cast<Arr1D<Type>*(Arr1D<Type>::*)()>(&Arr1D<Type>::deepcopy))\
     .def("deepcopy",static_cast<Arr1D<Type>*(Arr1D<Type>::*)(int)>(&Arr1D<Type>::deepcopy))\
     .def_readonly("ptr",&Arr1D<Type>::src,py::return_value_policy::reference)\
-    .def("set",[](Arr1D<Type> &arr,Arr1D<Type> *nsrc){arr.src = (Type*)nsrc->src;})\
+    .def_readonly("owned",&Arr1D<Type>::owned)\
+    .def("set",[](Arr1D<Type> &arr,Arr1D<Type> *nsrc){arr.alias((Type*)nsrc->src);})\
     .def("print",[](Arr1D<Type> &arr){std::cout<<(arr.src)<<std::endl;});
 
 #define BINDARR2D(Type) pybind11::class_<Arr2D<Type>>(m,"Arr2D"#Type)\
@@ -29,7 +30,7 @@ namespace py = pybind11;
     .def("__setitem__",[](Arr2D<Type> &arr,pybind11::tuple index, Type v){*(arr.src+(index[0].cast<int>())*arr.col+(index[1].cast<int>()))=v;})\
     .def("__iter__",[](Arr2D<Type> &arr){return pybind11::make_iterator(arr.src,arr.src+arr.row*arr.col);})\
     .def_readonly("ptr",&Arr2D<Type>::src,py::return_value_policy::reference)\
-    .def("set",[](Arr2D<Type> &arr,Arr2D<Type> *nsrc){arr.src = (Type*)nsrc->src;})\
+    .def("set",[](Arr2D<Type> &arr,Arr2D<Type> *nsrc){arr.alias((Type*)nsrc->src);})\
     .def("print",[](Arr2D<Type> &arr){std::cout<<(arr.src)<<std::endl;});
 
 
@@ -59,12 +60,41 @@ class FileWrapper {
 };
 
 
+// Ownership: an array built from a length (or deepcopy) owns its calloc'd buffer and
+// frees it on destruction; one built from a pointer, a copy, or a struct-member getter
+// only borrows it. A pointer-member setter (obs.data = arr) hands the buffer over to
+// the C struct, whose own free function (freeobs, ...) then releases it.
 template <class T>
 class Arr1D{
     public:
         typedef T value_type;
         T* src;
         int len;
+        bool owned = false;
+        Arr1D(const Arr1D& other) : src(other.src), len(other.len), owned(false) {}
+        Arr1D& operator=(const Arr1D& other) {
+            if (this != &other) {
+                release();
+                src = other.src;
+                len = other.len;
+                owned = false;
+            }
+            return *this;
+        }
+        Arr1D(Arr1D&& other) noexcept : src(other.src), len(other.len), owned(other.owned) {
+            other.owned = false;
+        }
+        ~Arr1D() { release(); }
+        void release() {
+            if (owned) {
+                free(src);
+            }
+            owned = false;
+        }
+        void alias(T* other_src) {
+            release();
+            src = other_src;
+        }
         //I'm thinking about add a reflection here so the setter can be implemented here rather than in the class.
         //void* obj;
         /*
@@ -77,6 +107,7 @@ class Arr1D{
         Arr1D(int len){
             this->len = len;
             this->src = (T*)calloc(len,sizeof(T));
+            this->owned = true;
             //std::cout<<(void*)(this->src)<<std::endl;
         };
         Arr1D(void *arr,int len){
@@ -102,16 +133,44 @@ class Arr1D{
         };
 };
 
+// Same ownership rules as Arr1D.
 template <class T>
 class Arr2D{
     public:
         typedef T value_type;
         T* src;
         int row,col;
+        bool owned = false;
+        Arr2D(const Arr2D& other) : src(other.src), row(other.row), col(other.col), owned(false) {}
+        Arr2D& operator=(const Arr2D& other) {
+            if (this != &other) {
+                release();
+                src = other.src;
+                row = other.row;
+                col = other.col;
+                owned = false;
+            }
+            return *this;
+        }
+        Arr2D(Arr2D&& other) noexcept : src(other.src), row(other.row), col(other.col), owned(other.owned) {
+            other.owned = false;
+        }
+        ~Arr2D() { release(); }
+        void release() {
+            if (owned) {
+                free(src);
+            }
+            owned = false;
+        }
+        void alias(T* other_src) {
+            release();
+            src = other_src;
+        }
         Arr2D(int row, int col){
             this->row = row;
             this->col = col;
             this->src = (T*)calloc(row*col,sizeof(T));
+            this->owned = true;
         }
         Arr2D(void* arr,int row,int col){
             this->src = (T*)arr;
@@ -136,13 +195,14 @@ void _bindArr1D_common(py::class_<Arr1D<Type>>& cls) {
     .def(py::init([](Type* src,int len){return std::unique_ptr<Arr1D<Type>>(new Arr1D<Type>((void*)src,len));}))
     .def("__len__",[](Arr1D<Type> &arr){return &arr.len;})
     .def("__getitem__",[](Arr1D<Type> &arr,int i){return arr.src+i;},py::return_value_policy::reference)
-    .def("__getitem__",[](Arr1D<Type> &arr,py::slice slice){Py_ssize_t start,stop,step;PySlice_Unpack(slice.ptr(),&start,&stop,&step);return new Arr1D<Type>(arr.src+start,stop-start);},py::return_value_policy::reference)
+    .def("__getitem__",[](Arr1D<Type> &arr,py::slice slice){Py_ssize_t start,stop,step;PySlice_Unpack(slice.ptr(),&start,&stop,&step);return new Arr1D<Type>(arr.src+start,stop-start);},py::return_value_policy::take_ownership)
     .def("__setitem__",[](Arr1D<Type> &arr,int i, Type v){arr.src[i]=v;})
     .def("__iter__",[](Arr1D<Type> &arr){return pybind11::make_iterator(arr.src,arr.src+arr.len);})
     .def("deepcopy",static_cast<Arr1D<Type>*(Arr1D<Type>::*)()>(&Arr1D<Type>::deepcopy))
     .def("deepcopy",static_cast<Arr1D<Type>*(Arr1D<Type>::*)(int)>(&Arr1D<Type>::deepcopy))
-    .def_readonly("ptr",&Arr1D<Type>::src,py::return_value_policy::reference)
-    .def("set",[](Arr1D<Type> &arr,Arr1D<Type> *nsrc){arr.src = (Type*)nsrc->src;})
+    .def_readonly("ptr",&Arr1D<Type>::src,py::return_value_policy::reference)\
+    .def_readonly("owned",&Arr1D<Type>::owned)
+    .def("set",[](Arr1D<Type> &arr,Arr1D<Type> *nsrc){arr.alias((Type*)nsrc->src);})
     .def("print",[](Arr1D<Type> &arr){std::cout<<(arr.src)<<std::endl;});
 }
 
@@ -218,7 +278,7 @@ void bindArr2D(py::module_& m, const std::string& typeName) {
     .def("__setitem__",[](Arr2D<Type> &arr,pybind11::tuple index, Type v){*(arr.src+(index[0].cast<int>())*arr.col+(index[1].cast<int>()))=v;})
     .def("__iter__",[](Arr2D<Type> &arr){return pybind11::make_iterator(arr.src,arr.src+arr.row*arr.col);})
     .def_readonly("ptr",&Arr2D<Type>::src,py::return_value_policy::reference)
-    .def("set",[](Arr2D<Type> &arr,Arr2D<Type> *nsrc){arr.src = (Type*)nsrc->src;})
+    .def("set",[](Arr2D<Type> &arr,Arr2D<Type> *nsrc){arr.alias((Type*)nsrc->src);})
     .def("print",[](Arr2D<Type> &arr){std::cout<<(arr.src)<<std::endl;});
 }
 
